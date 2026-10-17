@@ -1,7 +1,6 @@
 # ===== Compilados / Maven =====
 target/
 build/
-out/
 bin/
 *.class
 

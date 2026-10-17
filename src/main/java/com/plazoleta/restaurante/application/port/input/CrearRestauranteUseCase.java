@@ -4,5 +4,5 @@ import com.plazoleta.restaurante.domain.model.Restaurante;
 
 public interface CrearRestauranteUseCase {
 
-    Restaurante crearRestaurante(Restaurante restaurante);
+    Restaurante crear(Restaurante restaurante);
 }

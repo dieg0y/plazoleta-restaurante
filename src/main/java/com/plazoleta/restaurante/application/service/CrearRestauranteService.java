@@ -15,7 +15,7 @@ public class CrearRestauranteService implements CrearRestauranteUseCase {
     private final ValidarPropietarioPort validarPropietarioPort;
 
     @Override
-    public Restaurante crearRestaurante(Restaurante restaurante) {
+    public Restaurante crear(Restaurante restaurante) {
 
         if (restaurante.getNombre() == null || restaurante.getNombre().isBlank()) {
             throw new BusinessException("El nombre del restaurante es obligatorio");

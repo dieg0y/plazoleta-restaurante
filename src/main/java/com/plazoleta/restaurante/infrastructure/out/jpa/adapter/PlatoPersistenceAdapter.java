@@ -1,6 +1,7 @@
 package com.plazoleta.restaurante.infrastructure.out.jpa.adapter;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,6 +30,11 @@ public class PlatoPersistenceAdapter implements PlatoRepositoryPort {
         PlatoEntity entity = mapper.toEntity(plato);
         PlatoEntity guardado = jpaRepository.save(entity);
         return mapper.toDomain(guardado);
+    }
+
+    @Override
+    public Optional<Plato> obtenerPorId(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
     }
 
     @Override

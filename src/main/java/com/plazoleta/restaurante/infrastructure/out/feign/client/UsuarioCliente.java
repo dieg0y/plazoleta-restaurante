@@ -1,6 +1,10 @@
 package com.plazoleta.restaurante.infrastructure.out.feign.client;
 
+import com.plazoleta.restaurante.infrastructure.out.feign.dto.EmpleadoRemotoRequest;
+import com.plazoleta.restaurante.infrastructure.out.feign.dto.EmpleadoRemotoResponse;
 import com.plazoleta.restaurante.infrastructure.out.feign.dto.UsuarioClienteResponse;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,4 +14,7 @@ public interface UsuarioCliente {
 
     @GetMapping("/usuarios/{id}")
     UsuarioClienteResponse obtenerUsuario(@PathVariable("id") Long id);
+
+    @PostMapping("/empleados")
+    EmpleadoRemotoResponse crearEmpleado(@RequestBody EmpleadoRemotoRequest request);
 }

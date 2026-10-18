@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.plazoleta.restaurante.configuration.UsuarioAutenticado;
 
 @RestController
 @RequestMapping("/empleados")
@@ -25,10 +27,10 @@ public class EmpleadoController {
     // TODO HU5: idPropietario saldra del token JWT, no del query param
     @PostMapping
     public ResponseEntity<EmpleadoResponse> crearEmpleado(
-            @RequestParam Long idPropietario,
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestBody CrearEmpleadoRequest request) {
         Empleado empleado = empleadoRestMapper.toDomain(request);
-        Empleado registrado = crearEmpleadoUseCase.crearEmpleado(empleado, idPropietario);
+        Empleado registrado = crearEmpleadoUseCase.crearEmpleado(empleado, usuario.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(empleadoRestMapper.toResponse(registrado));
     }
 }

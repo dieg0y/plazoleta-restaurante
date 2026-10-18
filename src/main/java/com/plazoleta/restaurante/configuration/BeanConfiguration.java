@@ -1,5 +1,6 @@
 package com.plazoleta.restaurante.configuration;
 
+import com.plazoleta.restaurante.application.port.input.CambiarEstadoPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearEmpleadoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearRestauranteUseCase;
@@ -10,6 +11,7 @@ import com.plazoleta.restaurante.application.port.output.PlatoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.UsuarioClientePort;
 import com.plazoleta.restaurante.application.port.output.ValidarPropietarioPort;
+import com.plazoleta.restaurante.application.service.CambiarEstadoPlatoService;
 import com.plazoleta.restaurante.application.service.CrearEmpleadoService;
 import com.plazoleta.restaurante.application.service.CrearPlatoService;
 import com.plazoleta.restaurante.application.service.CrearRestauranteService;
@@ -59,5 +61,13 @@ public class BeanConfiguration {
             RestauranteRepositoryPort restauranteRepositoryPort,
             ValidarPropietarioPort validarPropietarioPort) {
         return new ModificarPlatoService(platoRepositoryPort, restauranteRepositoryPort, validarPropietarioPort);
+    }
+
+    @Bean
+    public CambiarEstadoPlatoUseCase cambiarEstadoPlatoUseCase(
+            PlatoRepositoryPort platoRepositoryPort,
+            RestauranteRepositoryPort restauranteRepositoryPort,
+            ValidarPropietarioPort validarPropietarioPort) {
+        return new CambiarEstadoPlatoService(platoRepositoryPort, restauranteRepositoryPort, validarPropietarioPort);
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.plazoleta.restaurante.application.port.input.CambiarEstadoPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
 import com.plazoleta.restaurante.application.port.input.ModificarPlatoUseCase;
@@ -19,6 +21,7 @@ import com.plazoleta.restaurante.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.domain.model.CategoriaPlato;
 import com.plazoleta.restaurante.domain.model.PaginaPlatos;
 import com.plazoleta.restaurante.domain.model.Plato;
+import com.plazoleta.restaurante.infrastructure.in.rest.dto.CambiarEstadoPlatoRequest;
 import com.plazoleta.restaurante.infrastructure.in.rest.dto.ModificarPlatoRequest;
 import com.plazoleta.restaurante.infrastructure.in.rest.dto.PlatoPaginaResponse;
 import com.plazoleta.restaurante.infrastructure.in.rest.dto.PlatoRequest;
@@ -36,6 +39,7 @@ public class PlatoController {
     private final CrearPlatoUseCase crearPlatoUseCase;
     private final ListarPlatosUseCase listarPlatosUseCase;
     private final ModificarPlatoUseCase modificarPlatoUseCase;
+    private final CambiarEstadoPlatoUseCase cambiarEstadoPlatoUseCase;
 
     // HU5: el idPropietario sale del token JWT, ya no del query param
     @PostMapping
@@ -47,7 +51,7 @@ public class PlatoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(platoRestMapper.toResponse(guardado));
     }
 
-    // Listado paginado de platos activos (categoría opcional) — público
+    // Listado paginado de platos activos (categoria opcional) - publico
     @GetMapping
     public ResponseEntity<PlatoPaginaResponse> listarPlatos(
             @RequestParam Long idRestaurante,
@@ -58,7 +62,7 @@ public class PlatoController {
         return ResponseEntity.ok(platoRestMapper.toPaginaResponse(pagina));
     }
 
-    // HU4: modificar SOLO precio y descripción — HU5: el dueño sale del token
+    // HU4: modificar SOLO precio y descripcion - HU5: el dueno sale del token
     @PutMapping("/{id}")
     public ResponseEntity<PlatoResponse> modificarPlato(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
@@ -66,6 +70,17 @@ public class PlatoController {
             @RequestBody ModificarPlatoRequest request) {
         Plato actualizado = modificarPlatoUseCase.modificar(
                 id, request.getPrecio(), request.getDescripcion(), usuario.id());
+        return ResponseEntity.ok(platoRestMapper.toResponse(actualizado));
+    }
+
+    // HU7: habilitar/deshabilitar plato - el dueno sale del token
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<PlatoResponse> cambiarEstadoPlato(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,
+            @RequestBody CambiarEstadoPlatoRequest request) {
+        Plato actualizado = cambiarEstadoPlatoUseCase.cambiarEstado(
+                id, request.getActivo(), usuario.id());
         return ResponseEntity.ok(platoRestMapper.toResponse(actualizado));
     }
 }

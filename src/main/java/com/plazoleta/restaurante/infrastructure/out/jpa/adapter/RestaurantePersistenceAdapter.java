@@ -8,6 +8,8 @@ import com.plazoleta.restaurante.infrastructure.out.jpa.repository.RestauranteJp
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class RestaurantePersistenceAdapter implements RestauranteRepositoryPort {
@@ -20,5 +22,10 @@ public class RestaurantePersistenceAdapter implements RestauranteRepositoryPort 
         RestauranteEntity entity = mapper.toEntity(restaurante);
         RestauranteEntity guardada = jpaRepository.save(entity);
         return mapper.toDomain(guardada);
+    }
+
+    @Override
+    public Optional<Restaurante> obtenerPorId(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
     }
 }

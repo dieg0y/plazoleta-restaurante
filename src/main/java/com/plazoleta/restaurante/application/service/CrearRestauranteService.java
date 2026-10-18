@@ -20,6 +20,9 @@ public class CrearRestauranteService implements CrearRestauranteUseCase {
         if (restaurante.getNombre() == null || restaurante.getNombre().isBlank()) {
             throw new BusinessException("El nombre del restaurante es obligatorio");
         }
+        if (restaurante.getNombre().matches("\\d+")) {
+            throw new BusinessException("El nombre del restaurante no puede estar compuesto unicamente por numeros");
+        }
         if (restaurante.getDireccion() == null || restaurante.getDireccion().isBlank()) {
             throw new BusinessException("La dirección del restaurante es obligatoria");
         }

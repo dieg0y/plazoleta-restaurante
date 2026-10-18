@@ -1,23 +1,44 @@
 package com.plazoleta.restaurante.configuration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * HU5 (parte restaurante): protege los endpoints por rol.
+ *
+ *  - POST /restaurantes → solo ADMINISTRADOR (el dueno se asigna en el body)
+ *  - POST /platos, PUT /platos/**, POST /empleados → solo PROPIETARIO
+ *  - GET /platos/** (menu), Swagger y /error → publicos
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // TODO HU5: reemplazar permitAll por autenticacion JWT
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+            @Value("${app.jwt.secret}") String secreto) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // Público: Swagger, errores y consulta del menú
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/platos/**").permitAll()
+                // HU5: protección por rol
+                .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST, "/platos").hasRole("PROPIETARIO")
+                .requestMatchers(HttpMethod.PUT, "/platos/**").hasRole("PROPIETARIO")
+                .requestMatchers(HttpMethod.POST, "/empleados").hasRole("PROPIETARIO")
+                .anyRequest().authenticated())
+            .addFilterBefore(new JwtAuthenticationFilter(secreto),
+                    UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

@@ -105,4 +105,12 @@ class CrearRestauranteServiceTest {
         assertThrows(BusinessException.class, () -> crearRestauranteService.crear(restaurante));
         verify(restauranteRepositoryPort, never()).guardar(any());
     }
+
+    @Test
+    void crearDebeFallarCuandoElNombreEsSoloNumeros() {
+        Restaurante invalido = builderValido().nombre("123456").build();
+
+        assertThrows(BusinessException.class, () -> crearRestauranteService.crear(invalido));
+        verifyNoInteractions(validarPropietarioPort, restauranteRepositoryPort);
+    }
 }

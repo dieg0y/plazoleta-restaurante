@@ -1,10 +1,13 @@
 package com.plazoleta.restaurante.infrastructure.in.rest.mapper;
 
+import com.plazoleta.restaurante.domain.model.PaginaPlatos;
 import com.plazoleta.restaurante.domain.model.Plato;
+import com.plazoleta.restaurante.infrastructure.in.rest.dto.PlatoPaginaResponse;
 import com.plazoleta.restaurante.infrastructure.in.rest.dto.PlatoRequest;
 import com.plazoleta.restaurante.infrastructure.in.rest.dto.PlatoResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PlatoRestMapper {
@@ -13,4 +16,18 @@ public interface PlatoRestMapper {
     Plato toDomain(PlatoRequest request);
 
     PlatoResponse toResponse(Plato plato);
+
+    // ===== HU5: listar platos =====
+
+    List<PlatoResponse> toResponseList(List<Plato> platos);
+
+    default PlatoPaginaResponse toPaginaResponse(PaginaPlatos pagina) {
+        return PlatoPaginaResponse.builder()
+                .contenido(toResponseList(pagina.getContenido()))
+                .pagina(pagina.getPagina())
+                .tamano(pagina.getTamano())
+                .totalElementos(pagina.getTotalElementos())
+                .totalPaginas(pagina.getTotalPaginas())
+                .build();
+    }
 }

@@ -21,4 +21,5 @@ public class PlatoResponse {
     private BigDecimal precio;
     private String urlImagen;
     private Long idRestaurante;
+    private Boolean activo;
 }

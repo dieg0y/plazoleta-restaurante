@@ -32,6 +32,8 @@ public class CrearPlatoService implements CrearPlatoUseCase {
 
         validarPropietarioPort.validarPropietario(idPropietario);
 
+        plato.setActivo(true);
+
         return platoRepositoryPort.guardar(plato);
     }
 
@@ -43,7 +45,16 @@ public class CrearPlatoService implements CrearPlatoUseCase {
             throw new BusinessException("La categoria del plato es obligatoria");
         }
         if (plato.getPrecio() == null || plato.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException("El precio del plato debe ser un valor positivo");
+            throw new BusinessException("El precio del plato debe ser un entero positivo mayor a 0");
+        }
+        if (plato.getPrecio().stripTrailingZeros().scale() > 0) {
+            throw new BusinessException("El precio del plato debe ser un entero positivo mayor a 0");
+        }
+        if (plato.getDescripcion() == null || plato.getDescripcion().isBlank()) {
+            throw new BusinessException("La descripcion del plato es obligatoria");
+        }
+        if (plato.getUrlImagen() == null || plato.getUrlImagen().isBlank()) {
+            throw new BusinessException("La url de la imagen del plato es obligatoria");
         }
         if (plato.getIdRestaurante() == null || plato.getIdRestaurante() <= 0) {
             throw new BusinessException("El id del restaurante es obligatorio");

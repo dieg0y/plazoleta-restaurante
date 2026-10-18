@@ -37,14 +37,18 @@ public class PlatoEntity {
     @Column(nullable = false, length = 20)
     private CategoriaPlato categoria;
 
+    @Column(nullable = false)
     private String descripcion;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(name = "url_imagen")
+    @Column(name = "url_imagen", nullable = false)
     private String urlImagen;
 
     @Column(name = "id_restaurante", nullable = false)
     private Long idRestaurante;
+
+    @Column(nullable = false)
+    private Boolean activo;
 }

@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -60,7 +61,7 @@ class CrearPlatoServiceTest {
     @Test
     void crearDebeGuardarYDevolverPlatoCuandoTodoEsValido() {
         Plato plato = platoValido().build();
-        Plato guardado = platoValido().id(10L).build();
+        Plato guardado = platoValido().id(10L).activo(true).build();
         when(restauranteRepositoryPort.obtenerPorId(1L))
                 .thenReturn(Optional.of(restauranteDePropietario(1L)));
         when(platoRepositoryPort.guardar(plato)).thenReturn(guardado);
@@ -68,6 +69,7 @@ class CrearPlatoServiceTest {
         Plato resultado = crearPlatoService.crear(plato, 1L);
 
         assertEquals(10L, resultado.getId());
+        assertTrue(plato.getActivo());
         verify(validarPropietarioPort).validarPropietario(1L);
         verify(platoRepositoryPort).guardar(plato);
     }
@@ -91,6 +93,30 @@ class CrearPlatoServiceTest {
     @Test
     void crearDebeFallarCuandoElPrecioNoEsPositivo() {
         Plato invalido = platoValido().precio(new BigDecimal("0")).build();
+
+        assertThrows(BusinessException.class, () -> crearPlatoService.crear(invalido, 1L));
+        verifyNoInteractions(platoRepositoryPort, restauranteRepositoryPort, validarPropietarioPort);
+    }
+
+    @Test
+    void crearDebeFallarCuandoElPrecioNoEsEntero() {
+        Plato invalido = platoValido().precio(new BigDecimal("15000.50")).build();
+
+        assertThrows(BusinessException.class, () -> crearPlatoService.crear(invalido, 1L));
+        verifyNoInteractions(platoRepositoryPort, restauranteRepositoryPort, validarPropietarioPort);
+    }
+
+    @Test
+    void crearDebeFallarCuandoLaDescripcionEsNula() {
+        Plato invalido = platoValido().descripcion(null).build();
+
+        assertThrows(BusinessException.class, () -> crearPlatoService.crear(invalido, 1L));
+        verifyNoInteractions(platoRepositoryPort, restauranteRepositoryPort, validarPropietarioPort);
+    }
+
+    @Test
+    void crearDebeFallarCuandoLaUrlImagenEsNula() {
+        Plato invalido = platoValido().urlImagen(null).build();
 
         assertThrows(BusinessException.class, () -> crearPlatoService.crear(invalido, 1L));
         verifyNoInteractions(platoRepositoryPort, restauranteRepositoryPort, validarPropietarioPort);

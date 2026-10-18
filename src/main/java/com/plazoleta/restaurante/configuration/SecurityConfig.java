@@ -13,9 +13,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * HU5 (parte restaurante): protege los endpoints por rol.
  *
- *  - POST /restaurantes -> solo ADMINISTRADOR (el dueno se asigna en el body)
+ *  - POST /restaurantes  -> solo ADMINISTRADOR (el dueno se asigna en el body)
  *  - POST /platos, PUT/PATCH /platos/**, POST /empleados -> solo PROPIETARIO
- *  - GET /platos/** (menu), Swagger y /error -> publicos
+ *  - GET /restaurantes (HU9, listado publico), GET /platos/** (menu),
+ *    Swagger y /error -> publicos
  */
 @Configuration
 @EnableWebSecurity
@@ -28,9 +29,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Publico: Swagger, errores y consulta del menu
+                // Publico: Swagger, errores, menu y listado de restaurantes (HU9)
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()
                 .requestMatchers(HttpMethod.GET, "/platos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/restaurantes").permitAll()
                 // HU5: proteccion por rol
                 .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMINISTRADOR")
                 .requestMatchers(HttpMethod.POST, "/platos").hasRole("PROPIETARIO")

@@ -13,4 +13,6 @@ public interface PlatoRepositoryPort {
     Optional<Plato> obtenerPorId(Long id);
 
     PaginaPlatos listarPorRestaurante(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
+
+    PaginaPlatos listarTodosPorRestaurante(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
 }

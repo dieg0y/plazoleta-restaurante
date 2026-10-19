@@ -10,4 +10,7 @@ import com.plazoleta.restaurante.domain.model.PaginaPlatos;
 public interface ListarPlatosUseCase {
 
     PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
+
+    PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano,
+            boolean incluirInactivos, Long idPropietario);
 }

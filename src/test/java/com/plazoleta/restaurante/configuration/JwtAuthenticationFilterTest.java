@@ -1,4 +1,4 @@
-package com.plazoleta.restaurante.configuration;
+package com.plazoleta.restaurante.infrastructure.configuration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,6 +20,9 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.plazoleta.restaurante.infrastructure.configuration.JwtAuthenticationFilter;
+import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

@@ -1,4 +1,4 @@
-package com.plazoleta.restaurante.infrastructure.out.feign;
+package com.plazoleta.restaurante.infrastructure.output.feign;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,6 +11,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.plazoleta.restaurante.infrastructure.output.feign.FeignAuthInterceptor;
 
 import feign.RequestTemplate;
 

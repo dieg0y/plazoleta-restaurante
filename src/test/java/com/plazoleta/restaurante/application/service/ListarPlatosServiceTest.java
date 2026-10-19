@@ -104,6 +104,41 @@ class ListarPlatosServiceTest {
     }
 
     @Test
+    @DisplayName("El propietario puede consultar también los platos inactivos de su restaurante")
+    void debePermitirAlPropietarioListarPlatosInactivos() {
+        Plato deshabilitado = Plato.builder()
+                .id(3L)
+                .nombre("Postre deshabilitado")
+                .categoria(CategoriaPlato.POSTRE)
+                .precio(new BigDecimal("9000"))
+                .descripcion("Temporalmente no disponible")
+                .urlImagen("http://imagen.com/postre.jpg")
+                .idRestaurante(1L)
+                .activo(false)
+                .build();
+        when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));
+        when(platoRepositoryPort.listarTodosPorRestaurante(1L, null, 0, 10))
+                .thenReturn(new PaginaPlatos(List.of(pasta, deshabilitado), 0, 10, 2));
+
+        PaginaPlatos resultado = listarPlatosService.listarPlatos(1L, null, 0, 10, true, 5L);
+
+        assertEquals(2, resultado.getTotalElementos());
+        verify(platoRepositoryPort).listarTodosPorRestaurante(1L, null, 0, 10);
+        verify(platoRepositoryPort, never()).listarPorRestaurante(any(), any(), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("Rechaza que un propietario consulte platos inactivos de otro restaurante")
+    void debeRechazarPropietarioAjenoAlConsultarPlatosInactivos() {
+        when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));
+
+        assertThrows(BusinessException.class,
+                () -> listarPlatosService.listarPlatos(1L, null, 0, 10, true, 9L));
+
+        verify(platoRepositoryPort, never()).listarTodosPorRestaurante(any(), any(), anyInt(), anyInt());
+    }
+
+    @Test
     @DisplayName("Calcula bien el total de páginas cuando hay más platos que el tamaño")
     void debeCalcularTotalPaginas() {
         when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));

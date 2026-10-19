@@ -1,5 +1,7 @@
 package com.plazoleta.restaurante.application.service;
 
+import java.util.Objects;
+
 import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
 import com.plazoleta.restaurante.application.port.output.PlatoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
@@ -14,7 +16,7 @@ import lombok.RequiredArgsConstructor;
  * Reglas:
  *  1. Parámetros de paginación válidos (page >= 0, size > 0).
  *  2. El restaurante debe existir.
- *  3. Solo se listan platos activos (lo resuelve el adaptador).
+ *  3. El listado público muestra activos; el propietario puede incluir inactivos.
  *  4. Categoría opcional como filtro.
  */
 @RequiredArgsConstructor
@@ -25,11 +27,25 @@ public class ListarPlatosService implements ListarPlatosUseCase {
 
     @Override
     public PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano) {
+        return listarPlatos(idRestaurante, categoria, pagina, tamano, false, null);
+    }
+
+    @Override
+    public PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano,
+            boolean incluirInactivos, Long idPropietario) {
         validarParametros(idRestaurante, pagina, tamano);
 
-        restauranteRepositoryPort.obtenerPorId(idRestaurante)
+        var restaurante = restauranteRepositoryPort.obtenerPorId(idRestaurante)
                 .orElseThrow(() -> new BusinessException(
                         "El restaurante con id " + idRestaurante + " no existe"));
+
+        if (incluirInactivos) {
+            if (idPropietario == null || !Objects.equals(restaurante.getIdPropietario(), idPropietario)) {
+                throw new BusinessException(
+                        "Solo el propietario del restaurante puede ver los platos deshabilitados");
+            }
+            return platoRepositoryPort.listarTodosPorRestaurante(idRestaurante, categoria, pagina, tamano);
+        }
 
         return platoRepositoryPort.listarPorRestaurante(idRestaurante, categoria, pagina, tamano);
     }

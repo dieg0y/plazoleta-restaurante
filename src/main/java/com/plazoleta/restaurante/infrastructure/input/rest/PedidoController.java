@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.CancelarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.EntregarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
@@ -44,6 +45,7 @@ public class PedidoController {
     private final AsignarPedidoUseCase asignarPedidoUseCase;
     private final MarcarPedidoListoUseCase marcarPedidoListoUseCase;
     private final EntregarPedidoUseCase entregarPedidoUseCase;
+    private final CancelarPedidoUseCase cancelarPedidoUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
@@ -123,6 +125,20 @@ public class PedidoController {
             @PathVariable Long id,
             @Valid @RequestBody EntregarPedidoRequest request) {
         Pedido pedido = entregarPedidoUseCase.entregar(id, usuario.id(), request.pin());
+        return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
+    }
+
+    @Operation(summary = "Cancelar un pedido pendiente del cliente autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido cancelado"),
+            @ApiResponse(responseCode = "400", description = "Pedido no pendiente o no pertenece al cliente"),
+            @ApiResponse(responseCode = "403", description = "Se requiere rol CLIENTE")
+    })
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<PedidoResponse> cancelarPedido(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id) {
+        Pedido pedido = cancelarPedidoUseCase.cancelar(id, usuario.id());
         return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
     }
 }

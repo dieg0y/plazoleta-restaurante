@@ -69,6 +69,7 @@ API y no utiliza Spring `Pageable`.
 | PATCH | `/pedidos/{id}/asignar` | Asigna el pedido e inicia preparación | EMPLEADO |
 | PATCH | `/pedidos/{id}/listo` | Marca listo y notifica el PIN por SMS | Empleado asignado |
 | PATCH | `/pedidos/{id}/entregar` | Entrega con el PIN de seis dígitos | EMPLEADO |
+| PATCH | `/pedidos/{id}/cancelar` | Cancela un pedido pendiente propio | CLIENTE |
 
 Las operaciones autenticadas esperan `Authorization: Bearer <JWT>`. La integración Feign hacia usuarios conserva el token de la petición.
 

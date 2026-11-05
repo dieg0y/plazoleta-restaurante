@@ -1,5 +1,7 @@
 package com.plazoleta.restaurante.infrastructure.input.rest;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,12 +18,14 @@ import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CancelarPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.ConsultarTrazabilidadPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.EntregarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.EntregarPedidoRequest;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.HistorialEstadoPedidoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PedidoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.mapper.PedidoRestMapper;
@@ -46,6 +50,7 @@ public class PedidoController {
     private final MarcarPedidoListoUseCase marcarPedidoListoUseCase;
     private final EntregarPedidoUseCase entregarPedidoUseCase;
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
+    private final ConsultarTrazabilidadPedidoUseCase consultarTrazabilidadPedidoUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
@@ -140,5 +145,24 @@ public class PedidoController {
             @PathVariable Long id) {
         Pedido pedido = cancelarPedidoUseCase.cancelar(id, usuario.id());
         return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
+    }
+
+    @Operation(summary = "Consultar los cambios de estado de un pedido propio")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Historial de estados del pedido"),
+            @ApiResponse(responseCode = "400", description = "El pedido no existe o no pertenece al cliente"),
+            @ApiResponse(responseCode = "403", description = "Se requiere rol CLIENTE")
+    })
+    @GetMapping("/{id}/trazabilidad")
+    public ResponseEntity<List<HistorialEstadoPedidoResponse>> consultarTrazabilidad(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id) {
+        List<HistorialEstadoPedidoResponse> historial = consultarTrazabilidadPedidoUseCase
+                .consultar(id, usuario.id())
+                .stream()
+                .map(estado -> new HistorialEstadoPedidoResponse(
+                        estado.id(), estado.estado(), estado.fechaCambio()))
+                .toList();
+        return ResponseEntity.ok(historial);
     }
 }

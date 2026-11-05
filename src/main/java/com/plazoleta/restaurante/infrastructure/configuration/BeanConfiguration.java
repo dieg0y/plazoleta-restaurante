@@ -6,6 +6,7 @@ import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearRestauranteUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
+import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarRestaurantesUseCase;
 import com.plazoleta.restaurante.application.port.input.ModificarPlatoUseCase;
 import com.plazoleta.restaurante.application.port.output.EmpleadoRepositoryPort;
@@ -20,6 +21,7 @@ import com.plazoleta.restaurante.application.service.CrearPedidoService;
 import com.plazoleta.restaurante.application.service.CrearPlatoService;
 import com.plazoleta.restaurante.application.service.CrearRestauranteService;
 import com.plazoleta.restaurante.application.service.ListarPlatosService;
+import com.plazoleta.restaurante.application.service.ListarPedidosService;
 import com.plazoleta.restaurante.application.service.ListarRestaurantesService;
 import com.plazoleta.restaurante.application.service.ModificarPlatoService;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +36,13 @@ public class BeanConfiguration {
             PlatoRepositoryPort platoRepositoryPort,
             RestauranteRepositoryPort restauranteRepositoryPort) {
         return new CrearPedidoService(pedidoRepositoryPort, platoRepositoryPort, restauranteRepositoryPort);
+    }
+
+    @Bean
+    public ListarPedidosUseCase listarPedidosUseCase(
+            EmpleadoRepositoryPort empleadoRepositoryPort,
+            PedidoRepositoryPort pedidoRepositoryPort) {
+        return new ListarPedidosService(empleadoRepositoryPort, pedidoRepositoryPort);
     }
 
     @Bean

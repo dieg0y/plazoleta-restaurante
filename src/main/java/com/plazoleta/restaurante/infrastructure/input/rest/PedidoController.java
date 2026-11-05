@@ -4,16 +4,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PedidoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.mapper.PedidoRestMapper;
+import com.plazoleta.restaurante.domain.model.EstadoPedido;
+import com.plazoleta.restaurante.domain.model.Pagina;
+import com.plazoleta.restaurante.domain.model.Pedido;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -28,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class PedidoController {
 
     private final CrearPedidoUseCase crearPedidoUseCase;
+    private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
     @Operation(summary = "Crear un pedido para un solo restaurante")
@@ -48,5 +56,21 @@ public class PedidoController {
         PedidoResponse response = pedidoRestMapper.toResponse(
                 crearPedidoUseCase.crear(usuario.id(), command));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(summary = "Listar pedidos del restaurante del empleado por estado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedidos del restaurante en la página solicitada"),
+            @ApiResponse(responseCode = "400", description = "Estado o paginación inválidos"),
+            @ApiResponse(responseCode = "403", description = "Se requiere rol EMPLEADO")
+    })
+    @GetMapping
+    public ResponseEntity<PageResponse<PedidoResponse>> listarPedidos(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam EstadoPedido estado,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pagina<Pedido> pagina = listarPedidosUseCase.listar(usuario.id(), estado, page, size);
+        return ResponseEntity.ok(PageResponse.from(pagina.map(pedidoRestMapper::toResponse)));
     }
 }

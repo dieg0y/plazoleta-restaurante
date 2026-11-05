@@ -10,4 +10,6 @@ public interface UsuarioClientePort {
 
     /** Crea la cuenta en el microservicio usuario y devuelve el id generado. */
     Long crearCuentaEmpleado(Empleado empleado);
+
+    String obtenerCelularCliente(Long idCliente);
 }

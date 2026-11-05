@@ -16,6 +16,7 @@ import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
+import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
@@ -39,6 +40,7 @@ public class PedidoController {
 
     private final CrearPedidoUseCase crearPedidoUseCase;
     private final AsignarPedidoUseCase asignarPedidoUseCase;
+    private final MarcarPedidoListoUseCase marcarPedidoListoUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
@@ -89,6 +91,20 @@ public class PedidoController {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id) {
         Pedido pedido = asignarPedidoUseCase.asignar(id, usuario.id());
+        return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
+    }
+
+    @Operation(summary = "Notificar al cliente cuando su pedido esté listo")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido listo y PIN enviado por SMS"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en preparación"),
+            @ApiResponse(responseCode = "403", description = "Se requiere el empleado asignado")
+    })
+    @PatchMapping("/{id}/listo")
+    public ResponseEntity<PedidoResponse> marcarPedidoListo(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id) {
+        Pedido pedido = marcarPedidoListoUseCase.marcarListo(id, usuario.id());
         return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
     }
 }

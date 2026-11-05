@@ -1,6 +1,7 @@
 package com.plazoleta.restaurante.infrastructure.configuration;
 
 import com.plazoleta.restaurante.application.port.input.CambiarEstadoPlatoUseCase;
+import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearEmpleadoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
@@ -16,6 +17,7 @@ import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPo
 import com.plazoleta.restaurante.application.port.output.UsuarioClientePort;
 import com.plazoleta.restaurante.application.port.output.ValidarPropietarioPort;
 import com.plazoleta.restaurante.application.service.CambiarEstadoPlatoService;
+import com.plazoleta.restaurante.application.service.AsignarPedidoService;
 import com.plazoleta.restaurante.application.service.CrearEmpleadoService;
 import com.plazoleta.restaurante.application.service.CrearPedidoService;
 import com.plazoleta.restaurante.application.service.CrearPlatoService;
@@ -43,6 +45,13 @@ public class BeanConfiguration {
             EmpleadoRepositoryPort empleadoRepositoryPort,
             PedidoRepositoryPort pedidoRepositoryPort) {
         return new ListarPedidosService(empleadoRepositoryPort, pedidoRepositoryPort);
+    }
+
+    @Bean
+    public AsignarPedidoUseCase asignarPedidoUseCase(
+            EmpleadoRepositoryPort empleadoRepositoryPort,
+            PedidoRepositoryPort pedidoRepositoryPort) {
+        return new AsignarPedidoService(empleadoRepositoryPort, pedidoRepositoryPort);
     }
 
     @Bean

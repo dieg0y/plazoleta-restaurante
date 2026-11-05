@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
 import com.plazoleta.restaurante.domain.exception.BusinessException;
-import com.plazoleta.restaurante.domain.model.PaginaRestaurantes;
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Restaurante;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,15 +38,15 @@ class ListarRestaurantesServiceTest {
                         .urlLogo("https://logo.com/fogon.png").build(),
                 Restaurante.builder().id(2L).nombre("La Parrilla")
                         .urlLogo("https://logo.com/parrilla.png").build());
-        PaginaRestaurantes pagina = new PaginaRestaurantes(restaurantes, 0, 10, 2);
+        Pagina<Restaurante> pagina = new Pagina<>(restaurantes, 0, 10, 2);
         when(restauranteRepositoryPort.listarOrdenadosPorNombre(0, 10)).thenReturn(pagina);
 
-        PaginaRestaurantes resultado = listarRestaurantesService.listarRestaurantes(0, 10);
+        Pagina<Restaurante> resultado = listarRestaurantesService.listarRestaurantes(0, 10);
 
-        assertEquals(2, resultado.getContenido().size());
-        assertEquals(2, resultado.getTotalElementos());
-        assertEquals(1, resultado.getTotalPaginas());
-        assertEquals("Fogon de Pandi", resultado.getContenido().get(0).getNombre());
+        assertEquals(2, resultado.contenido().size());
+        assertEquals(2, resultado.totalElementos());
+        assertEquals(1, resultado.totalPaginas());
+        assertEquals("Fogon de Pandi", resultado.contenido().get(0).getNombre());
     }
 
     @Test
@@ -67,6 +67,14 @@ class ListarRestaurantesServiceTest {
         assertThrows(BusinessException.class,
                 () -> listarRestaurantesService.listarRestaurantes(0, -5));
 
+        verify(restauranteRepositoryPort, never()).listarOrdenadosPorNombre(anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("Rechaza un desplazamiento de página que no cabe en la consulta")
+    void debeRechazarDesplazamientoDemasiadoGrande() {
+        assertThrows(BusinessException.class,
+                () -> listarRestaurantesService.listarRestaurantes(Integer.MAX_VALUE, 2));
         verify(restauranteRepositoryPort, never()).listarOrdenadosPorNombre(anyInt(), anyInt());
     }
 }

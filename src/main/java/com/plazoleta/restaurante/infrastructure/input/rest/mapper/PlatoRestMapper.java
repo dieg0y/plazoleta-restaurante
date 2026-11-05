@@ -1,8 +1,8 @@
 package com.plazoleta.restaurante.infrastructure.input.rest.mapper;
 
-import com.plazoleta.restaurante.domain.model.PaginaPlatos;
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Plato;
-import com.plazoleta.restaurante.infrastructure.input.rest.dto.PlatoPaginaResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PlatoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PlatoResponse;
 
@@ -22,13 +22,7 @@ public interface PlatoRestMapper {
 
     List<PlatoResponse> toResponseList(List<Plato> platos);
 
-    default PlatoPaginaResponse toPaginaResponse(PaginaPlatos pagina) {
-        return PlatoPaginaResponse.builder()
-                .contenido(toResponseList(pagina.getContenido()))
-                .pagina(pagina.getPagina())
-                .tamano(pagina.getTamano())
-                .totalElementos(pagina.getTotalElementos())
-                .totalPaginas(pagina.getTotalPaginas())
-                .build();
+    default PageResponse<PlatoResponse> toPageResponse(Pagina<Plato> pagina) {
+        return PageResponse.from(pagina.map(this::toResponse));
     }
 }

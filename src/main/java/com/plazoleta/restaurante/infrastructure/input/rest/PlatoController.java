@@ -19,12 +19,12 @@ import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
 import com.plazoleta.restaurante.application.port.input.ModificarPlatoUseCase;
 import com.plazoleta.restaurante.domain.model.CategoriaPlato;
-import com.plazoleta.restaurante.domain.model.PaginaPlatos;
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Plato;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CambiarEstadoPlatoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.ModificarPlatoRequest;
-import com.plazoleta.restaurante.infrastructure.input.rest.dto.PlatoPaginaResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PlatoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PlatoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.mapper.PlatoRestMapper;
@@ -66,7 +66,7 @@ public class PlatoController {
     // El listado publico muestra platos activos; el propietario puede incluir inactivos.
     @Operation(summary = "Listar platos activos de un restaurante")
     @GetMapping
-    public ResponseEntity<PlatoPaginaResponse> listarPlatos(
+    public ResponseEntity<PageResponse<PlatoResponse>> listarPlatos(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam Long idRestaurante,
             @RequestParam(defaultValue = "0") int page,
@@ -80,9 +80,9 @@ public class PlatoController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Solo el propietario puede ver los platos deshabilitados");
         }
-        PaginaPlatos pagina = listarPlatosUseCase.listarPlatos(
+        Pagina<Plato> pagina = listarPlatosUseCase.listarPlatos(
                 idRestaurante, categoria, page, size, todos, todos ? usuario.id() : null);
-        return ResponseEntity.ok(platoRestMapper.toPaginaResponse(pagina));
+        return ResponseEntity.ok(platoRestMapper.toPageResponse(pagina));
     }
 
     // HU4: modificar SOLO precio y descripcion - HU5: el dueno sale del token

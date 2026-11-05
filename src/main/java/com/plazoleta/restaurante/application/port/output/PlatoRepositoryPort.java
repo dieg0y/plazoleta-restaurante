@@ -3,7 +3,7 @@ package com.plazoleta.restaurante.application.port.output;
 import java.util.Optional;
 
 import com.plazoleta.restaurante.domain.model.CategoriaPlato;
-import com.plazoleta.restaurante.domain.model.PaginaPlatos;
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Plato;
 
 public interface PlatoRepositoryPort {
@@ -12,7 +12,7 @@ public interface PlatoRepositoryPort {
 
     Optional<Plato> obtenerPorId(Long id);
 
-    PaginaPlatos listarPorRestaurante(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
+    Pagina<Plato> listarPorRestaurante(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
 
-    PaginaPlatos listarTodosPorRestaurante(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
+    Pagina<Plato> listarTodosPorRestaurante(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
 }

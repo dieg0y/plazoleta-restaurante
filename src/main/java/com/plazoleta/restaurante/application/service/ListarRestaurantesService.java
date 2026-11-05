@@ -3,7 +3,8 @@ package com.plazoleta.restaurante.application.service;
 import com.plazoleta.restaurante.application.port.input.ListarRestaurantesUseCase;
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
 import com.plazoleta.restaurante.domain.exception.BusinessException;
-import com.plazoleta.restaurante.domain.model.PaginaRestaurantes;
+import com.plazoleta.restaurante.domain.model.Pagina;
+import com.plazoleta.restaurante.domain.model.Restaurante;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -16,12 +17,15 @@ public class ListarRestaurantesService implements ListarRestaurantesUseCase {
     private final RestauranteRepositoryPort restauranteRepositoryPort;
 
     @Override
-    public PaginaRestaurantes listarRestaurantes(int pagina, int tamano) {
+    public Pagina<Restaurante> listarRestaurantes(int pagina, int tamano) {
         if (pagina < 0) {
             throw new BusinessException("El número de página no puede ser negativo");
         }
         if (tamano <= 0) {
             throw new BusinessException("El tamaño de página debe ser mayor a 0");
+        }
+        if ((long) pagina * tamano > Integer.MAX_VALUE) {
+            throw new BusinessException("El desplazamiento de página es demasiado grande");
         }
         return restauranteRepositoryPort.listarOrdenadosPorNombre(pagina, tamano);
     }

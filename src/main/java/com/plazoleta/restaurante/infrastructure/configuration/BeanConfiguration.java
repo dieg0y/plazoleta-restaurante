@@ -2,18 +2,21 @@ package com.plazoleta.restaurante.infrastructure.configuration;
 
 import com.plazoleta.restaurante.application.port.input.CambiarEstadoPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearEmpleadoUseCase;
+import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearRestauranteUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarRestaurantesUseCase;
 import com.plazoleta.restaurante.application.port.input.ModificarPlatoUseCase;
 import com.plazoleta.restaurante.application.port.output.EmpleadoRepositoryPort;
+import com.plazoleta.restaurante.application.port.output.PedidoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.PlatoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.UsuarioClientePort;
 import com.plazoleta.restaurante.application.port.output.ValidarPropietarioPort;
 import com.plazoleta.restaurante.application.service.CambiarEstadoPlatoService;
 import com.plazoleta.restaurante.application.service.CrearEmpleadoService;
+import com.plazoleta.restaurante.application.service.CrearPedidoService;
 import com.plazoleta.restaurante.application.service.CrearPlatoService;
 import com.plazoleta.restaurante.application.service.CrearRestauranteService;
 import com.plazoleta.restaurante.application.service.ListarPlatosService;
@@ -24,6 +27,14 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class BeanConfiguration {
+
+    @Bean
+    public CrearPedidoUseCase crearPedidoUseCase(
+            PedidoRepositoryPort pedidoRepositoryPort,
+            PlatoRepositoryPort platoRepositoryPort,
+            RestauranteRepositoryPort restauranteRepositoryPort) {
+        return new CrearPedidoService(pedidoRepositoryPort, platoRepositoryPort, restauranteRepositoryPort);
+    }
 
     @Bean
     public CrearRestauranteUseCase crearRestauranteUseCase(

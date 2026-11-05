@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/platos/**").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.PATCH, "/platos/**").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.POST, "/empleados").hasRole("PROPIETARIO")
+                .requestMatchers(HttpMethod.POST, "/pedidos").hasRole("CLIENTE")
                 .anyRequest().authenticated())
             .addFilterBefore(new JwtAuthenticationFilter(secreto),
                     UsernamePasswordAuthenticationFilter.class);

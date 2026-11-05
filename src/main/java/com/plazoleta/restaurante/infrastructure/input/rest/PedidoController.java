@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.EntregarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.EntregarPedidoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PedidoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.mapper.PedidoRestMapper;
@@ -41,6 +43,7 @@ public class PedidoController {
     private final CrearPedidoUseCase crearPedidoUseCase;
     private final AsignarPedidoUseCase asignarPedidoUseCase;
     private final MarcarPedidoListoUseCase marcarPedidoListoUseCase;
+    private final EntregarPedidoUseCase entregarPedidoUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
@@ -105,6 +108,21 @@ public class PedidoController {
             @AuthenticationPrincipal UsuarioAutenticado usuario,
             @PathVariable Long id) {
         Pedido pedido = marcarPedidoListoUseCase.marcarListo(id, usuario.id());
+        return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
+    }
+
+    @Operation(summary = "Validar el PIN y marcar un pedido listo como entregado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido entregado"),
+            @ApiResponse(responseCode = "400", description = "Pedido no listo o PIN incorrecto"),
+            @ApiResponse(responseCode = "403", description = "Se requiere un empleado del restaurante")
+    })
+    @PatchMapping("/{id}/entregar")
+    public ResponseEntity<PedidoResponse> entregarPedido(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id,
+            @Valid @RequestBody EntregarPedidoRequest request) {
+        Pedido pedido = entregarPedidoUseCase.entregar(id, usuario.id(), request.pin());
         return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
     }
 }

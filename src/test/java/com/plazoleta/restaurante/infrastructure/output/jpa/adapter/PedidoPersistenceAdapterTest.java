@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
+import com.plazoleta.restaurante.domain.model.HistorialEstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Pedido;
 import com.plazoleta.restaurante.domain.model.PedidoPlato;
@@ -44,6 +45,9 @@ class PedidoPersistenceAdapterTest {
         assertThat(leido.getPlatos().get(0).precioUnitario()).isEqualByComparingTo("12000");
         assertThat(leido.getPlatos().get(0).cantidad()).isEqualTo(2);
         assertThat(adapter.existePedidoActivoPorCliente(41L)).isTrue();
+        assertThat(adapter.listarHistorialEstados(creado.getId()))
+                .extracting(HistorialEstadoPedido::estado)
+                .containsExactly(EstadoPedido.PENDIENTE);
     }
 
     @Test
@@ -83,6 +87,9 @@ class PedidoPersistenceAdapterTest {
         assertThat(actualizado.getIdEmpleadoAsignado()).isEqualTo(23L);
         assertThat(actualizado.getPlatos()).hasSize(1);
         assertThat(actualizado.getPlatos().get(0).nombrePlato()).isEqualTo("Arepa");
+        assertThat(adapter.listarHistorialEstados(creado.getId()))
+                .extracting(HistorialEstadoPedido::estado)
+                .containsExactly(EstadoPedido.PENDIENTE, EstadoPedido.EN_PREPARACION);
     }
 
     private Pedido guardarPedido(Long idRestaurante, EstadoPedido estado, String fecha) {

@@ -43,6 +43,10 @@ Swagger UI: <http://localhost:8081/swagger-ui/index.html>
 Los pedidos recorren los estados `PENDIENTE`, `EN_PREPARACION`, `LISTO`,
 `ENTREGADO` o `CANCELADO`. Para HU14, configura `APP_INTERNAL_TOKEN` con el
 mismo valor de al menos 32 caracteres en ambos microservicios, y configura
+## Notificaciones SMS
+
+Para HU14, configura `APP_INTERNAL_TOKEN` con el mismo valor de al menos
+32 caracteres usado por el microservicio de usuarios, y configura
 `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_PHONE_NUMBER` con las
 credenciales del proveedor. No guardes estos valores en Git. Las pruebas usan
 adaptadores simulados y no requieren una cuenta de Twilio.

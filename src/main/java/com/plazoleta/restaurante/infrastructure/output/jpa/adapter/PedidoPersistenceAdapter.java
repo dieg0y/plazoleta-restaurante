@@ -1,5 +1,6 @@
 package com.plazoleta.restaurante.infrastructure.output.jpa.adapter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -11,14 +12,18 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.plazoleta.restaurante.application.port.output.PedidoRepositoryPort;
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
+import com.plazoleta.restaurante.domain.model.HistorialEstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Pedido;
 import com.plazoleta.restaurante.domain.model.PedidoPlato;
 import com.plazoleta.restaurante.infrastructure.output.jpa.entity.PedidoEntity;
+import com.plazoleta.restaurante.infrastructure.output.jpa.entity.PedidoHistorialEstadoEntity;
 import com.plazoleta.restaurante.infrastructure.output.jpa.entity.PedidoPlatoEntity;
+import com.plazoleta.restaurante.infrastructure.output.jpa.repository.PedidoHistorialEstadoJpaRepository;
 import com.plazoleta.restaurante.infrastructure.output.jpa.repository.PedidoJpaRepository;
 import com.plazoleta.restaurante.infrastructure.output.jpa.repository.PedidoPlatoJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +36,16 @@ public class PedidoPersistenceAdapter implements PedidoRepositoryPort {
             List.of(EstadoPedido.PENDIENTE, EstadoPedido.EN_PREPARACION, EstadoPedido.LISTO);
 
     private final PedidoJpaRepository pedidoRepository;
+    private final PedidoHistorialEstadoJpaRepository historialRepository;
     private final PedidoPlatoJpaRepository pedidoPlatoRepository;
     private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public Pedido guardar(Pedido pedido) {
+        EstadoPedido estadoAnterior = pedido.getId() == null
+                ? null
+                : pedidoRepository.findById(pedido.getId()).map(PedidoEntity::getEstado).orElse(null);
         PedidoEntity entidad = pedidoRepository.save(PedidoEntity.builder()
                 .id(pedido.getId())
                 .idCliente(pedido.getIdCliente())
@@ -47,6 +57,14 @@ public class PedidoPersistenceAdapter implements PedidoRepositoryPort {
                 .fechaFinalizacion(pedido.getFechaFinalizacion())
                 .codigoPinHash(pedido.getCodigoPinHash())
                 .build());
+
+        if (pedido.getId() == null || (estadoAnterior != null && estadoAnterior != pedido.getEstado())) {
+            historialRepository.save(PedidoHistorialEstadoEntity.builder()
+                    .idPedido(entidad.getId())
+                    .estado(pedido.getEstado())
+                    .fechaCambio(Instant.now())
+                    .build());
+        }
 
         List<PedidoPlato> platos = pedido.getPlatos() == null ? List.of() : pedido.getPlatos();
         if (pedido.getId() == null) {
@@ -109,6 +127,17 @@ public class PedidoPersistenceAdapter implements PedidoRepositoryPort {
                 .map(entidad -> mapear(entidad, platosPorPedido.getOrDefault(entidad.getId(), List.of())))
                 .toList();
         return new Pagina<>(pedidos, pagina, tamano, totalElementos);
+    }
+
+    @Override
+    public List<HistorialEstadoPedido> listarHistorialEstados(Long idPedido) {
+        return historialRepository.findAllByIdPedidoOrderByFechaCambioAscIdAsc(idPedido).stream()
+                .map(entidad -> new HistorialEstadoPedido(
+                        entidad.getId(),
+                        entidad.getIdPedido(),
+                        entidad.getEstado(),
+                        entidad.getFechaCambio()))
+                .toList();
     }
 
     private Predicate[] predicados(

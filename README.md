@@ -38,6 +38,14 @@ necesitan MySQL:
 
 Swagger UI: <http://localhost:8081/swagger-ui/index.html>
 
+## Notificaciones SMS
+
+Para HU14, configura `APP_INTERNAL_TOKEN` con el mismo valor de al menos
+32 caracteres usado por el microservicio de usuarios, y configura
+`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_PHONE_NUMBER` con las
+credenciales del proveedor. No guardes estos valores en Git. Las pruebas usan
+adaptadores simulados y no requieren una cuenta de Twilio.
+
 ## Endpoints implementados
 
 Los endpoints de restaurantes y platos devuelven el mismo `PageResponse<T>`:

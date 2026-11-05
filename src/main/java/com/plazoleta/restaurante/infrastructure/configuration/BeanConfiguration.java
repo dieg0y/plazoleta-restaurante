@@ -6,6 +6,7 @@ import com.plazoleta.restaurante.application.port.input.CrearEmpleadoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearRestauranteUseCase;
+import com.plazoleta.restaurante.application.port.input.EntregarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
@@ -25,6 +26,7 @@ import com.plazoleta.restaurante.application.service.CrearEmpleadoService;
 import com.plazoleta.restaurante.application.service.CrearPedidoService;
 import com.plazoleta.restaurante.application.service.CrearPlatoService;
 import com.plazoleta.restaurante.application.service.CrearRestauranteService;
+import com.plazoleta.restaurante.application.service.EntregarPedidoService;
 import com.plazoleta.restaurante.application.service.ListarPlatosService;
 import com.plazoleta.restaurante.application.service.ListarPedidosService;
 import com.plazoleta.restaurante.application.service.MarcarPedidoListoService;
@@ -68,6 +70,15 @@ public class BeanConfiguration {
         return new MarcarPedidoListoService(
                 empleadoRepositoryPort, pedidoRepositoryPort, usuarioClientePort,
                 codigoSeguridadPedidoPort, enviarSmsPort);
+    }
+
+    @Bean
+    public EntregarPedidoUseCase entregarPedidoUseCase(
+            EmpleadoRepositoryPort empleadoRepositoryPort,
+            PedidoRepositoryPort pedidoRepositoryPort,
+            CodigoSeguridadPedidoPort codigoSeguridadPedidoPort) {
+        return new EntregarPedidoService(
+                empleadoRepositoryPort, pedidoRepositoryPort, codigoSeguridadPedidoPort);
     }
 
     @Bean

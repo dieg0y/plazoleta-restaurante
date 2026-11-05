@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/pedidos/*/asignar").hasRole("EMPLEADO")
                 .requestMatchers(HttpMethod.PATCH, "/pedidos/*/listo").hasRole("EMPLEADO")
                 .requestMatchers(HttpMethod.PATCH, "/pedidos/*/entregar").hasRole("EMPLEADO")
+                .requestMatchers(HttpMethod.PATCH, "/pedidos/*/cancelar").hasRole("CLIENTE")
                 .anyRequest().authenticated())
             .addFilterBefore(new JwtAuthenticationFilter(secreto),
                     UsernamePasswordAuthenticationFilter.class);

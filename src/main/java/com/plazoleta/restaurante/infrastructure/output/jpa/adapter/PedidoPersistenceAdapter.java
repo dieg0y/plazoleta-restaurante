@@ -140,6 +140,15 @@ public class PedidoPersistenceAdapter implements PedidoRepositoryPort {
                 .toList();
     }
 
+    @Override
+    public List<Pedido> listarEntregadosPorRestaurante(Long idRestaurante) {
+        return pedidoRepository.findAllByIdRestauranteAndEstadoAndFechaFinalizacionIsNotNullOrderByFechaFinalizacionAscIdAsc(
+                        idRestaurante, EstadoPedido.ENTREGADO)
+                .stream()
+                .map(entidad -> mapear(entidad, List.of()))
+                .toList();
+    }
+
     private Predicate[] predicados(
             CriteriaBuilder criteriaBuilder, Root<PedidoEntity> pedido,
             Long idRestaurante, EstadoPedido estado) {

@@ -18,6 +18,7 @@ import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CancelarPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.ConsultarEficienciaPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.ConsultarTrazabilidadPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.EntregarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
@@ -25,9 +26,12 @@ import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.EntregarPedidoRequest;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.DuracionPedidoResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.EficienciaPedidosResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.HistorialEstadoPedidoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PedidoResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.PromedioTiempoEmpleadoResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.mapper.PedidoRestMapper;
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pagina;
@@ -51,6 +55,7 @@ public class PedidoController {
     private final EntregarPedidoUseCase entregarPedidoUseCase;
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
     private final ConsultarTrazabilidadPedidoUseCase consultarTrazabilidadPedidoUseCase;
+    private final ConsultarEficienciaPedidosUseCase consultarEficienciaPedidosUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
@@ -164,5 +169,31 @@ public class PedidoController {
                         estado.id(), estado.estado(), estado.fechaCambio()))
                 .toList();
         return ResponseEntity.ok(historial);
+    }
+
+    @Operation(summary = "Consultar tiempos de pedidos y ranking promedio de empleados")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Tiempos de pedidos entregados del restaurante"),
+            @ApiResponse(responseCode = "400", description = "Restaurante inválido o fuera de la propiedad"),
+            @ApiResponse(responseCode = "403", description = "Se requiere rol PROPIETARIO")
+    })
+    @GetMapping("/eficiencia")
+    public ResponseEntity<EficienciaPedidosResponse> consultarEficiencia(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam Long idRestaurante) {
+        var informe = consultarEficienciaPedidosUseCase.consultar(idRestaurante, usuario.id());
+        EficienciaPedidosResponse response = new EficienciaPedidosResponse(
+                informe.pedidos().stream()
+                        .map(pedido -> new DuracionPedidoResponse(
+                                pedido.idPedido(), pedido.idEmpleado(), pedido.duracionSegundos()))
+                        .toList(),
+                informe.ranking().stream()
+                        .map(empleado -> new PromedioTiempoEmpleadoResponse(
+                                empleado.idEmpleado(),
+                                empleado.pedidosEntregados(),
+                                empleado.promedioDuracionSegundos(),
+                                empleado.posicion()))
+                        .toList());
+        return ResponseEntity.ok(response);
     }
 }

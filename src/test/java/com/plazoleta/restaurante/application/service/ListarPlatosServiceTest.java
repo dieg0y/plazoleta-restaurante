@@ -24,7 +24,7 @@ import com.plazoleta.restaurante.application.port.output.PlatoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
 import com.plazoleta.restaurante.domain.exception.BusinessException;
 import com.plazoleta.restaurante.domain.model.CategoriaPlato;
-import com.plazoleta.restaurante.domain.model.PaginaPlatos;
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Plato;
 import com.plazoleta.restaurante.domain.model.Restaurante;
 
@@ -80,13 +80,13 @@ class ListarPlatosServiceTest {
     void debeListarPlatosSinCategoria() {
         when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));
         when(platoRepositoryPort.listarPorRestaurante(1L, null, 0, 10))
-                .thenReturn(new PaginaPlatos(List.of(pasta, sopa), 0, 10, 2));
+                .thenReturn(new Pagina<>(List.of(pasta, sopa), 0, 10, 2));
 
-        PaginaPlatos resultado = listarPlatosService.listarPlatos(1L, null, 0, 10);
+        Pagina<Plato> resultado = listarPlatosService.listarPlatos(1L, null, 0, 10);
 
-        assertEquals(2, resultado.getContenido().size());
-        assertEquals(2, resultado.getTotalElementos());
-        assertEquals(1, resultado.getTotalPaginas());
+        assertEquals(2, resultado.contenido().size());
+        assertEquals(2, resultado.totalElementos());
+        assertEquals(1, resultado.totalPaginas());
     }
 
     @Test
@@ -94,12 +94,12 @@ class ListarPlatosServiceTest {
     void debeListarPlatosConCategoria() {
         when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));
         when(platoRepositoryPort.listarPorRestaurante(1L, CategoriaPlato.PLATO_FUERTE, 0, 10))
-                .thenReturn(new PaginaPlatos(List.of(pasta), 0, 10, 1));
+                .thenReturn(new Pagina<>(List.of(pasta), 0, 10, 1));
 
-        PaginaPlatos resultado = listarPlatosService.listarPlatos(1L, CategoriaPlato.PLATO_FUERTE, 0, 10);
+        Pagina<Plato> resultado = listarPlatosService.listarPlatos(1L, CategoriaPlato.PLATO_FUERTE, 0, 10);
 
-        assertEquals(1, resultado.getContenido().size());
-        assertEquals("Pasta carbonara", resultado.getContenido().get(0).getNombre());
+        assertEquals(1, resultado.contenido().size());
+        assertEquals("Pasta carbonara", resultado.contenido().get(0).getNombre());
         verify(platoRepositoryPort).listarPorRestaurante(1L, CategoriaPlato.PLATO_FUERTE, 0, 10);
     }
 
@@ -118,11 +118,11 @@ class ListarPlatosServiceTest {
                 .build();
         when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));
         when(platoRepositoryPort.listarTodosPorRestaurante(1L, null, 0, 10))
-                .thenReturn(new PaginaPlatos(List.of(pasta, deshabilitado), 0, 10, 2));
+                .thenReturn(new Pagina<>(List.of(pasta, deshabilitado), 0, 10, 2));
 
-        PaginaPlatos resultado = listarPlatosService.listarPlatos(1L, null, 0, 10, true, 5L);
+        Pagina<Plato> resultado = listarPlatosService.listarPlatos(1L, null, 0, 10, true, 5L);
 
-        assertEquals(2, resultado.getTotalElementos());
+        assertEquals(2, resultado.totalElementos());
         verify(platoRepositoryPort).listarTodosPorRestaurante(1L, null, 0, 10);
         verify(platoRepositoryPort, never()).listarPorRestaurante(any(), any(), anyInt(), anyInt());
     }
@@ -143,12 +143,12 @@ class ListarPlatosServiceTest {
     void debeCalcularTotalPaginas() {
         when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restaurante()));
         when(platoRepositoryPort.listarPorRestaurante(1L, null, 0, 10))
-                .thenReturn(new PaginaPlatos(List.of(pasta), 0, 10, 25));
+                .thenReturn(new Pagina<>(List.of(pasta), 0, 10, 25));
 
-        PaginaPlatos resultado = listarPlatosService.listarPlatos(1L, null, 0, 10);
+        Pagina<Plato> resultado = listarPlatosService.listarPlatos(1L, null, 0, 10);
 
-        assertEquals(25, resultado.getTotalElementos());
-        assertEquals(3, resultado.getTotalPaginas()); // 25 platos / 10 por página
+        assertEquals(25, resultado.totalElementos());
+        assertEquals(3, resultado.totalPaginas());
     }
 
     @Test
@@ -177,6 +177,14 @@ class ListarPlatosServiceTest {
         assertThrows(BusinessException.class,
                 () -> listarPlatosService.listarPlatos(1L, null, 0, 0));
 
+        verify(platoRepositoryPort, never()).listarPorRestaurante(any(), any(), anyInt(), anyInt());
+    }
+
+    @Test
+    @DisplayName("Rechaza un desplazamiento de página que no cabe en la consulta")
+    void debeRechazarDesplazamientoDemasiadoGrande() {
+        assertThrows(BusinessException.class,
+                () -> listarPlatosService.listarPlatos(1L, null, Integer.MAX_VALUE, 2));
         verify(platoRepositoryPort, never()).listarPorRestaurante(any(), any(), anyInt(), anyInt());
     }
 }

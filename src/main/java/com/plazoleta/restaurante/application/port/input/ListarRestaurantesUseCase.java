@@ -1,6 +1,7 @@
 package com.plazoleta.restaurante.application.port.input;
 
-import com.plazoleta.restaurante.domain.model.PaginaRestaurantes;
+import com.plazoleta.restaurante.domain.model.Pagina;
+import com.plazoleta.restaurante.domain.model.Restaurante;
 
 /**
  * PUERTO DE ENTRADA HU9: listar restaurantes para que el cliente
@@ -8,5 +9,5 @@ import com.plazoleta.restaurante.domain.model.PaginaRestaurantes;
  */
 public interface ListarRestaurantesUseCase {
 
-    PaginaRestaurantes listarRestaurantes(int pagina, int tamano);
+    Pagina<Restaurante> listarRestaurantes(int pagina, int tamano);
 }

@@ -7,7 +7,8 @@ import com.plazoleta.restaurante.application.port.output.PlatoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.RestauranteRepositoryPort;
 import com.plazoleta.restaurante.domain.exception.BusinessException;
 import com.plazoleta.restaurante.domain.model.CategoriaPlato;
-import com.plazoleta.restaurante.domain.model.PaginaPlatos;
+import com.plazoleta.restaurante.domain.model.Pagina;
+import com.plazoleta.restaurante.domain.model.Plato;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -26,12 +27,12 @@ public class ListarPlatosService implements ListarPlatosUseCase {
     private final RestauranteRepositoryPort restauranteRepositoryPort;
 
     @Override
-    public PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano) {
+    public Pagina<Plato> listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano) {
         return listarPlatos(idRestaurante, categoria, pagina, tamano, false, null);
     }
 
     @Override
-    public PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano,
+    public Pagina<Plato> listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano,
             boolean incluirInactivos, Long idPropietario) {
         validarParametros(idRestaurante, pagina, tamano);
 
@@ -59,6 +60,9 @@ public class ListarPlatosService implements ListarPlatosUseCase {
         }
         if (tamano <= 0) {
             throw new BusinessException("El tamaño de página debe ser mayor a 0");
+        }
+        if ((long) pagina * tamano > Integer.MAX_VALUE) {
+            throw new BusinessException("El desplazamiento de página es demasiado grande");
         }
     }
 }

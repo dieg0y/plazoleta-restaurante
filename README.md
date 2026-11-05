@@ -40,6 +40,10 @@ Swagger UI: <http://localhost:8081/swagger-ui/index.html>
 
 ## Endpoints implementados
 
+Los endpoints de restaurantes y platos devuelven el mismo `PageResponse<T>`:
+`contenido`, `pagina` (base cero), `tamano`, `totalElementos` y `totalPaginas`.
+La consulta aplica paginación con Criteria API y no utiliza Spring `Pageable`.
+
 | Método | Ruta | Descripción | Acceso |
 |---|---|---|---|
 | GET | `/restaurantes?page=0&size=10` | Lista alfabética paginada | Público |

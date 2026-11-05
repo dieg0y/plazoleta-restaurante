@@ -11,11 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.restaurante.application.port.input.CrearRestauranteUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarRestaurantesUseCase;
-import com.plazoleta.restaurante.domain.model.PaginaRestaurantes;
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Restaurante;
-import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestaurantePaginaResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteResumenResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.mapper.RestauranteRestMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,10 +51,10 @@ public class RestauranteController {
     // HU9: listado público, alfabético y paginado (solo nombre y logo)
     @Operation(summary = "Listar restaurantes en orden alfabético")
     @GetMapping
-    public ResponseEntity<RestaurantePaginaResponse> listarRestaurantes(
+    public ResponseEntity<PageResponse<RestauranteResumenResponse>> listarRestaurantes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        PaginaRestaurantes pagina = listarRestaurantesUseCase.listarRestaurantes(page, size);
-        return ResponseEntity.ok(restauranteRestMapper.toPaginaResponse(pagina));
+        Pagina<Restaurante> pagina = listarRestaurantesUseCase.listarRestaurantes(page, size);
+        return ResponseEntity.ok(restauranteRestMapper.toPageResponse(pagina));
     }
 }

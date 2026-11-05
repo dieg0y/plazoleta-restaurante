@@ -1,7 +1,8 @@
 package com.plazoleta.restaurante.application.port.input;
 
 import com.plazoleta.restaurante.domain.model.CategoriaPlato;
-import com.plazoleta.restaurante.domain.model.PaginaPlatos;
+import com.plazoleta.restaurante.domain.model.Pagina;
+import com.plazoleta.restaurante.domain.model.Plato;
 
 /**
  * PUERTO DE ENTRADA HU5: listar los platos activos de un
@@ -9,8 +10,8 @@ import com.plazoleta.restaurante.domain.model.PaginaPlatos;
  */
 public interface ListarPlatosUseCase {
 
-    PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
+    Pagina<Plato> listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano);
 
-    PaginaPlatos listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano,
+    Pagina<Plato> listarPlatos(Long idRestaurante, CategoriaPlato categoria, int pagina, int tamano,
             boolean incluirInactivos, Long idPropietario);
 }

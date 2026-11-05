@@ -3,9 +3,11 @@ package com.plazoleta.restaurante.infrastructure.input.rest.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.plazoleta.restaurante.domain.model.PaginaRestaurantes;
+import java.util.List;
+
+import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Restaurante;
-import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestaurantePaginaResponse;
+import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteResumenResponse;
@@ -25,6 +27,9 @@ public interface RestauranteRestMapper {
     // telefono, idPropietario) porque el target solo los tiene a esos dos.
     RestauranteResumenResponse toResumenResponse(Restaurante restaurante);
 
-    // MapStruct usa toResumenResponse automáticamente para cada elemento de la lista
-    RestaurantePaginaResponse toPaginaResponse(PaginaRestaurantes pagina);
+    List<RestauranteResumenResponse> toResumenResponseList(List<Restaurante> restaurantes);
+
+    default PageResponse<RestauranteResumenResponse> toPageResponse(Pagina<Restaurante> pagina) {
+        return PageResponse.from(pagina.map(this::toResumenResponse));
+    }
 }

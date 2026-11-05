@@ -4,6 +4,7 @@ import com.plazoleta.restaurante.application.port.input.CambiarEstadoPlatoUseCas
 import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CancelarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ConsultarTrazabilidadPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.ConsultarEficienciaPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearEmpleadoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.CrearPlatoUseCase;
@@ -26,6 +27,7 @@ import com.plazoleta.restaurante.application.service.CambiarEstadoPlatoService;
 import com.plazoleta.restaurante.application.service.AsignarPedidoService;
 import com.plazoleta.restaurante.application.service.CancelarPedidoService;
 import com.plazoleta.restaurante.application.service.ConsultarTrazabilidadPedidoService;
+import com.plazoleta.restaurante.application.service.ConsultarEficienciaPedidosService;
 import com.plazoleta.restaurante.application.service.CrearEmpleadoService;
 import com.plazoleta.restaurante.application.service.CrearPedidoService;
 import com.plazoleta.restaurante.application.service.CrearPlatoService;
@@ -94,6 +96,13 @@ public class BeanConfiguration {
     public ConsultarTrazabilidadPedidoUseCase consultarTrazabilidadPedidoUseCase(
             PedidoRepositoryPort pedidoRepositoryPort) {
         return new ConsultarTrazabilidadPedidoService(pedidoRepositoryPort);
+    }
+
+    @Bean
+    public ConsultarEficienciaPedidosUseCase consultarEficienciaPedidosUseCase(
+            PedidoRepositoryPort pedidoRepositoryPort,
+            RestauranteRepositoryPort restauranteRepositoryPort) {
+        return new ConsultarEficienciaPedidosService(pedidoRepositoryPort, restauranteRepositoryPort);
     }
 
     @Bean

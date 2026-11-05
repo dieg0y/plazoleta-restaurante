@@ -92,6 +92,24 @@ class PedidoPersistenceAdapterTest {
                 .containsExactly(EstadoPedido.PENDIENTE, EstadoPedido.EN_PREPARACION);
     }
 
+    @Test
+    void listaSoloPedidosEntregadosConFechaFinalDelRestaurante() {
+        Pedido entregado = guardarPedido(74L, EstadoPedido.PENDIENTE, "2026-11-05T17:00:00Z");
+        adapter.guardar(entregado.toBuilder()
+                .estado(EstadoPedido.ENTREGADO)
+                .idEmpleadoAsignado(24L)
+                .fechaFinalizacion(Instant.parse("2026-11-05T17:05:00Z"))
+                .build());
+        guardarPedido(74L, EstadoPedido.PENDIENTE, "2026-11-05T17:01:00Z");
+        guardarPedido(75L, EstadoPedido.ENTREGADO, "2026-11-05T17:02:00Z");
+
+        List<Pedido> entregados = adapter.listarEntregadosPorRestaurante(74L);
+
+        assertThat(entregados).extracting(Pedido::getId).containsExactly(entregado.getId());
+        assertThat(entregados.get(0).getFechaFinalizacion())
+                .isEqualTo(Instant.parse("2026-11-05T17:05:00Z"));
+    }
+
     private Pedido guardarPedido(Long idRestaurante, EstadoPedido estado, String fecha) {
         return adapter.guardar(Pedido.builder()
                 .idCliente(41L)

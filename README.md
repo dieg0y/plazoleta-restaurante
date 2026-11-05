@@ -71,10 +71,14 @@ API y no utiliza Spring `Pageable`.
 | PATCH | `/pedidos/{id}/entregar` | Entrega con el PIN de seis dígitos | EMPLEADO |
 | PATCH | `/pedidos/{id}/cancelar` | Cancela un pedido pendiente propio | CLIENTE |
 | GET | `/pedidos/{id}/trazabilidad` | Consulta el historial de estados propio | CLIENTE |
+| GET | `/pedidos/eficiencia?idRestaurante=1` | Consulta tiempos y ranking del restaurante | PROPIETARIO |
 
 Las operaciones autenticadas esperan `Authorization: Bearer <JWT>`. La integración Feign hacia usuarios conserva el token de la petición.
 
 ## Datos de demostración
+
+El informe de eficiencia incluye pedidos entregados; sus duraciones y promedios
+se expresan en segundos, con el ranking ordenado de menor a mayor tiempo.
 
 Cuando `restaurante` y `plato` están vacías, el inicializador crea los
 restaurantes Sabor Paisa y Sushi Go y ocho platos (seis activos y dos inactivos).

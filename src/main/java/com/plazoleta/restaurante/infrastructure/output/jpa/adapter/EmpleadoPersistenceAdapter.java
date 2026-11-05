@@ -5,6 +5,8 @@ import com.plazoleta.restaurante.domain.model.Empleado;
 import com.plazoleta.restaurante.infrastructure.output.jpa.entity.EmpleadoEntity;
 import com.plazoleta.restaurante.infrastructure.output.jpa.repository.EmpleadoJpaRepository;
 
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -33,5 +35,15 @@ public class EmpleadoPersistenceAdapter implements EmpleadoRepositoryPort {
                 .idUsuario(guardado.getIdUsuario())
                 .idRestaurante(guardado.getIdRestaurante())
                 .build();
+    }
+
+    @Override
+    public Optional<Empleado> obtenerPorIdUsuario(Long idUsuario) {
+        return jpaRepository.findByIdUsuario(idUsuario)
+                .map(entidad -> Empleado.builder()
+                        .id(entidad.getId())
+                        .idUsuario(entidad.getIdUsuario())
+                        .idRestaurante(entidad.getIdRestaurante())
+                        .build());
     }
 }

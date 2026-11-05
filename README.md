@@ -38,11 +38,21 @@ necesitan MySQL:
 
 Swagger UI: <http://localhost:8081/swagger-ui/index.html>
 
+## Pedidos y notificaciones SMS
+
+Los pedidos recorren los estados `PENDIENTE`, `EN_PREPARACION`, `LISTO`,
+`ENTREGADO` o `CANCELADO`. Para HU14, configura `APP_INTERNAL_TOKEN` con el
+mismo valor de al menos 32 caracteres en ambos microservicios, y configura
+`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_PHONE_NUMBER` con las
+credenciales del proveedor. No guardes estos valores en Git. Las pruebas usan
+adaptadores simulados y no requieren una cuenta de Twilio.
+
 ## Endpoints implementados
 
-Los endpoints de restaurantes y platos devuelven el mismo `PageResponse<T>`:
-`contenido`, `pagina` (base cero), `tamano`, `totalElementos` y `totalPaginas`.
-La consulta aplica paginación con Criteria API y no utiliza Spring `Pageable`.
+Los endpoints paginados de restaurantes, platos y pedidos devuelven el mismo
+`PageResponse<T>`: `contenido`, `pagina` (base cero), `tamano`,
+`totalElementos` y `totalPaginas`. La consulta aplica paginación con Criteria
+API y no utiliza Spring `Pageable`.
 
 | Método | Ruta | Descripción | Acceso |
 |---|---|---|---|
@@ -54,11 +64,21 @@ La consulta aplica paginación con Criteria API y no utiliza Spring `Pageable`.
 | PUT | `/platos/{id}` | Modifica precio y descripción | PROPIETARIO del restaurante |
 | PATCH | `/platos/{id}/estado` | Habilita o deshabilita un plato | PROPIETARIO del restaurante |
 | POST | `/empleados` | Crea y asocia empleado | PROPIETARIO |
+| POST | `/pedidos` | Crea un pedido | CLIENTE |
+| GET | `/pedidos?estado=PENDIENTE&page=0&size=10` | Lista pedidos del restaurante del empleado | EMPLEADO |
+| PATCH | `/pedidos/{id}/asignar` | Asigna el pedido e inicia preparación | EMPLEADO |
+| PATCH | `/pedidos/{id}/listo` | Marca listo y notifica el PIN por SMS | Empleado asignado |
+| PATCH | `/pedidos/{id}/entregar` | Entrega con el PIN de seis dígitos | EMPLEADO |
+| PATCH | `/pedidos/{id}/cancelar` | Cancela un pedido pendiente propio | CLIENTE |
+| GET | `/pedidos/{id}/trazabilidad` | Consulta el historial de estados propio | CLIENTE |
+| GET | `/pedidos/eficiencia?idRestaurante=1` | Consulta tiempos y ranking del restaurante | PROPIETARIO |
 
-Las operaciones autenticadas esperan el encabezado `Authorization: Bearer {JWT}`.
-La integración Feign hacia usuarios conserva el token de la petición.
+Las operaciones autenticadas esperan `Authorization: Bearer <JWT>`. La integración Feign hacia usuarios conserva el token de la petición.
 
 ## Datos de demostración
+
+El informe de eficiencia incluye pedidos entregados; sus duraciones y promedios
+se expresan en segundos, con el ranking ordenado de menor a mayor tiempo.
 
 Cuando `restaurante` y `plato` están vacías, el inicializador crea los
 restaurantes Sabor Paisa y Sushi Go y ocho platos (seis activos y dos inactivos).
@@ -83,7 +103,7 @@ docker run --rm -p 8081:8081 `
 
 ## Alcance
 
-Este microservicio persiste restaurantes, platos y empleados. No existe en este
-repositorio una entidad, tabla, API ni migración de pedidos; por eso no crea los
-cinco pedidos de ejemplo ni implementa fases, trazabilidad o SMS. Esos flujos
-requieren el microservicio de pedidos.
+Este microservicio persiste restaurantes, platos, empleados y pedidos. El
+historial de estados y los datos de eficiencia se consultan desde las APIs de
+pedidos; el acceso se limita al cliente propietario o al propietario del
+restaurante correspondiente.

@@ -40,6 +40,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/platos/**").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.POST, "/empleados").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.POST, "/pedidos").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/pedidos").hasRole("EMPLEADO")
+                .requestMatchers(HttpMethod.PATCH, "/pedidos/*/asignar").hasRole("EMPLEADO")
+                .requestMatchers(HttpMethod.PATCH, "/pedidos/*/listo").hasRole("EMPLEADO")
+                .requestMatchers(HttpMethod.PATCH, "/pedidos/*/entregar").hasRole("EMPLEADO")
+                .requestMatchers(HttpMethod.PATCH, "/pedidos/*/cancelar").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/pedidos/*/trazabilidad").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/pedidos/eficiencia").hasRole("PROPIETARIO")
                 .anyRequest().authenticated())
             .addFilterBefore(new JwtAuthenticationFilter(secreto),
                     UsernamePasswordAuthenticationFilter.class);

@@ -35,7 +35,7 @@ class PaginacionPersistenceAdapterTest {
     private PlatoJpaRepository platoRepository;
 
     @Test
-    void paginaRestaurantesOrdenaYAplicaDesplazamientoSinPageable() {
+    void paginaRestaurantesOrdenaYAplicaDesplazamientoEnConsulta() {
         long totalInicial = restauranteRepository.count();
         restauranteRepository.saveAllAndFlush(List.of(
                 restaurante("ZZZ restaurante paginacion"),

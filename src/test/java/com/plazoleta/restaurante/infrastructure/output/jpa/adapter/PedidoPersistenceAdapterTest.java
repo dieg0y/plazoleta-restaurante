@@ -62,6 +62,29 @@ class PedidoPersistenceAdapterTest {
         assertThat(primera.totalPaginas()).isEqualTo(2);
     }
 
+    @Test
+    void actualizaEstadoYEmpleadoSinPerderLosPlatosDelPedido() {
+        Pedido creado = adapter.guardar(Pedido.builder()
+                .idCliente(42L)
+                .idRestaurante(73L)
+                .estado(EstadoPedido.PENDIENTE)
+                .valorTotal(new BigDecimal("9000"))
+                .fechaCreacion(Instant.parse("2026-11-05T16:00:00Z"))
+                .platos(List.of(new PedidoPlato(62L, "Arepa", new BigDecimal("9000"), 1)))
+                .build());
+
+        adapter.guardar(creado.toBuilder()
+                .estado(EstadoPedido.EN_PREPARACION)
+                .idEmpleadoAsignado(23L)
+                .build());
+        Pedido actualizado = adapter.obtenerPorId(creado.getId()).orElseThrow();
+
+        assertThat(actualizado.getEstado()).isEqualTo(EstadoPedido.EN_PREPARACION);
+        assertThat(actualizado.getIdEmpleadoAsignado()).isEqualTo(23L);
+        assertThat(actualizado.getPlatos()).hasSize(1);
+        assertThat(actualizado.getPlatos().get(0).nombrePlato()).isEqualTo("Arepa");
+    }
+
     private Pedido guardarPedido(Long idRestaurante, EstadoPedido estado, String fecha) {
         return adapter.guardar(Pedido.builder()
                 .idCliente(41L)

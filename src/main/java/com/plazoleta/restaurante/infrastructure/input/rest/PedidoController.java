@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.plazoleta.restaurante.application.port.input.CrearPedidoCommand;
 import com.plazoleta.restaurante.application.port.input.CrearPedidoUseCase;
+import com.plazoleta.restaurante.application.port.input.AsignarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
@@ -35,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class PedidoController {
 
     private final CrearPedidoUseCase crearPedidoUseCase;
+    private final AsignarPedidoUseCase asignarPedidoUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
@@ -72,5 +76,19 @@ public class PedidoController {
             @RequestParam(defaultValue = "10") int size) {
         Pagina<Pedido> pagina = listarPedidosUseCase.listar(usuario.id(), estado, page, size);
         return ResponseEntity.ok(PageResponse.from(pagina.map(pedidoRestMapper::toResponse)));
+    }
+
+    @Operation(summary = "Asignarse a un pedido pendiente e iniciar su preparación")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedido asignado y en preparación"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está disponible para asignación"),
+            @ApiResponse(responseCode = "403", description = "Se requiere un empleado del restaurante")
+    })
+    @PatchMapping("/{id}/asignar")
+    public ResponseEntity<PedidoResponse> asignarPedido(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @PathVariable Long id) {
+        Pedido pedido = asignarPedidoUseCase.asignar(id, usuario.id());
+        return ResponseEntity.ok(pedidoRestMapper.toResponse(pedido));
     }
 }

@@ -1,5 +1,7 @@
 package com.plazoleta.restaurante.application.port.output;
 
+import java.util.Optional;
+
 import com.plazoleta.restaurante.domain.model.Empleado;
 
 /**
@@ -8,4 +10,6 @@ import com.plazoleta.restaurante.domain.model.Empleado;
 public interface EmpleadoRepositoryPort {
 
     Empleado guardar(Empleado empleado);
+
+    Optional<Empleado> obtenerPorIdUsuario(Long idUsuario);
 }

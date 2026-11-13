@@ -80,6 +80,8 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
             case "21606" -> "El remitente no pertenece a esta cuenta o no tiene capacidad para enviar SMS.";
             case "21608" -> "La cuenta Trial requiere que verifiques el número destinatario en Twilio.";
             case "21610" -> "El destinatario optó por no recibir mensajes de esta cuenta.";
+            case "572002" -> "En una cuenta Trial, el remitente debe ser el número de Messaging asignado "
+                    + "en Twilio Console a ese destinatario verificado.";
             default -> "Consulta este código en los registros de Twilio y revisa cuenta, remitente y destinatario.";
         };
         return new SmsDeliveryException(

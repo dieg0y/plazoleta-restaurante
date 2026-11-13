@@ -69,4 +69,20 @@ class TwilioSmsAdapterTest {
         assertTrue(exception.getMessage().contains("20003"));
         assertTrue(exception.getMessage().contains("autenticación"));
     }
+
+    @Test
+    void explicaElRemitenteAsignadoPorTwilioTrialAlDestinatario() {
+        HttpClientErrorException respuestaTwilio = new HttpClientErrorException(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "Unprocessable Entity",
+                HttpHeaders.EMPTY,
+                "{\"code\":572002}".getBytes(StandardCharsets.UTF_8),
+                StandardCharsets.UTF_8);
+
+        SmsDeliveryException exception = TwilioSmsAdapter.mapearRechazoTwilio(respuestaTwilio);
+
+        assertTrue(exception.getMessage().contains("572002"));
+        assertTrue(exception.getMessage().contains("cuenta Trial"));
+        assertTrue(exception.getMessage().contains("asignado"));
+    }
 }

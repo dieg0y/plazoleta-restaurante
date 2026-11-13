@@ -24,6 +24,8 @@ import com.plazoleta.restaurante.domain.exception.BusinessException;
 import com.plazoleta.restaurante.domain.model.Empleado;
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pedido;
+import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class MarcarPedidoListoServiceTest {
@@ -89,6 +91,24 @@ class MarcarPedidoListoServiceTest {
         assertThrows(BusinessException.class, () -> service.marcarListo(9L, 22L));
 
         verify(enviarSmsPort, never()).enviar(any(), any());
+        verify(pedidoRepositoryPort, never()).guardar(any());
+    }
+
+    @Test
+    void noCambiaElEstadoSiFallaLaNotificacionSms() {
+        when(empleadoRepositoryPort.obtenerPorIdUsuario(22L))
+                .thenReturn(Optional.of(Empleado.builder().idUsuario(22L).idRestaurante(4L).build()));
+        when(pedidoRepositoryPort.obtenerPorId(9L))
+                .thenReturn(Optional.of(pedido(4L, EstadoPedido.EN_PREPARACION, 22L)));
+        when(usuarioClientePort.obtenerCelularCliente(14L)).thenReturn("+573001234567");
+        when(codigoSeguridadPedidoPort.generar()).thenReturn("123456");
+        when(codigoSeguridadPedidoPort.codificar("123456")).thenReturn("hash-seguro");
+        org.mockito.Mockito.doThrow(new SmsDeliveryException(
+                HttpStatus.SERVICE_UNAVAILABLE, "Twilio no está configurado"))
+                .when(enviarSmsPort).enviar(any(), any());
+
+        assertThrows(SmsDeliveryException.class, () -> service.marcarListo(9L, 22L));
+
         verify(pedidoRepositoryPort, never()).guardar(any());
     }
 

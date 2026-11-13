@@ -1,6 +1,7 @@
 package com.plazoleta.restaurante.infrastructure.input.rest;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import com.plazoleta.restaurante.application.port.input.ConsultarEficienciaPedid
 import com.plazoleta.restaurante.application.port.input.ConsultarTrazabilidadPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.EntregarPedidoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
+import com.plazoleta.restaurante.application.port.input.ListarPedidosClienteUseCase;
 import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
 import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.CrearPedidoRequest;
@@ -36,6 +38,7 @@ import com.plazoleta.restaurante.infrastructure.input.rest.mapper.PedidoRestMapp
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Pedido;
+import com.plazoleta.restaurante.domain.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -57,6 +60,7 @@ public class PedidoController {
     private final ConsultarTrazabilidadPedidoUseCase consultarTrazabilidadPedidoUseCase;
     private final ConsultarEficienciaPedidosUseCase consultarEficienciaPedidosUseCase;
     private final ListarPedidosUseCase listarPedidosUseCase;
+    private final ListarPedidosClienteUseCase listarPedidosClienteUseCase;
     private final PedidoRestMapper pedidoRestMapper;
 
     @Operation(summary = "Crear un pedido para un solo restaurante")
@@ -79,7 +83,7 @@ public class PedidoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "Listar pedidos del restaurante del empleado por estado")
+    @Operation(summary = "Listar pedidos del restaurante del empleado por estado o todos")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pedidos del restaurante en la página solicitada"),
             @ApiResponse(responseCode = "400", description = "Estado o paginación inválidos"),
@@ -88,10 +92,27 @@ public class PedidoController {
     @GetMapping
     public ResponseEntity<PageResponse<PedidoResponse>> listarPedidos(
             @AuthenticationPrincipal UsuarioAutenticado usuario,
-            @RequestParam EstadoPedido estado,
+            @RequestParam(defaultValue = "TODOS") String estado,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Pagina<Pedido> pagina = listarPedidosUseCase.listar(usuario.id(), estado, page, size);
+        Pagina<Pedido> pagina = listarPedidosUseCase.listar(usuario.id(), parsearEstado(estado), page, size);
+        return ResponseEntity.ok(PageResponse.from(pagina.map(pedidoRestMapper::toResponse)));
+    }
+
+    @Operation(summary = "Listar todos los pedidos del cliente autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Pedidos propios paginados"),
+            @ApiResponse(responseCode = "400", description = "El filtro o la paginación son inválidos"),
+            @ApiResponse(responseCode = "403", description = "Se requiere rol CLIENTE")
+    })
+    @GetMapping("/mios")
+    public ResponseEntity<PageResponse<PedidoResponse>> listarMisPedidos(
+            @AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) Long idPedido,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pagina<Pedido> pagina = listarPedidosClienteUseCase
+                .listar(usuario.id(), idPedido, page, size);
         return ResponseEntity.ok(PageResponse.from(pagina.map(pedidoRestMapper::toResponse)));
     }
 
@@ -112,8 +133,10 @@ public class PedidoController {
     @Operation(summary = "Notificar al cliente cuando su pedido esté listo")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pedido listo y PIN enviado por SMS"),
-            @ApiResponse(responseCode = "400", description = "El pedido no está en preparación"),
-            @ApiResponse(responseCode = "403", description = "Se requiere el empleado asignado")
+            @ApiResponse(responseCode = "400", description = "El pedido no está en preparación o el SMS es inválido"),
+            @ApiResponse(responseCode = "403", description = "Se requiere el empleado asignado"),
+            @ApiResponse(responseCode = "502", description = "Twilio rechazó la notificación SMS"),
+            @ApiResponse(responseCode = "503", description = "Twilio no está configurado o no está disponible")
     })
     @PatchMapping("/{id}/listo")
     public ResponseEntity<PedidoResponse> marcarPedidoListo(
@@ -195,5 +218,16 @@ public class PedidoController {
                                 empleado.posicion()))
                         .toList());
         return ResponseEntity.ok(response);
+    }
+
+    private EstadoPedido parsearEstado(String estado) {
+        if (estado == null || estado.isBlank() || "TODOS".equalsIgnoreCase(estado)) {
+            return null;
+        }
+        try {
+            return EstadoPedido.valueOf(estado.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException excepcion) {
+            throw new BusinessException("El estado del pedido no es válido");
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.plazoleta.restaurante.infrastructure.output.jpa.adapter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -116,6 +117,33 @@ public class PedidoPersistenceAdapter implements PedidoRepositoryPort {
                 .where(predicados(criteriaBuilder, pedidoConteo, idRestaurante, estado));
         long totalElementos = entityManager.createQuery(consultaConteo).getSingleResult();
 
+        return crearPagina(entidades, pagina, tamano, totalElementos);
+    }
+
+    @Override
+    public Pagina<Pedido> listarPorCliente(Long idCliente, Long idPedido, int pagina, int tamano) {
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<PedidoEntity> consulta = criteriaBuilder.createQuery(PedidoEntity.class);
+        Root<PedidoEntity> pedido = consulta.from(PedidoEntity.class);
+        consulta.select(pedido)
+                .where(predicadosCliente(criteriaBuilder, pedido, idCliente, idPedido))
+                .orderBy(criteriaBuilder.desc(pedido.get("fechaCreacion")), criteriaBuilder.desc(pedido.get("id")));
+        List<PedidoEntity> entidades = entityManager.createQuery(consulta)
+                .setFirstResult(Math.toIntExact((long) pagina * tamano))
+                .setMaxResults(tamano)
+                .getResultList();
+
+        CriteriaQuery<Long> consultaConteo = criteriaBuilder.createQuery(Long.class);
+        Root<PedidoEntity> pedidoConteo = consultaConteo.from(PedidoEntity.class);
+        consultaConteo.select(criteriaBuilder.count(pedidoConteo))
+                .where(predicadosCliente(criteriaBuilder, pedidoConteo, idCliente, idPedido));
+        long totalElementos = entityManager.createQuery(consultaConteo).getSingleResult();
+
+        return crearPagina(entidades, pagina, tamano, totalElementos);
+    }
+
+    private Pagina<Pedido> crearPagina(
+            List<PedidoEntity> entidades, int pagina, int tamano, long totalElementos) {
         List<Long> idsPedidos = entidades.stream().map(PedidoEntity::getId).toList();
         Map<Long, List<PedidoPlato>> platosPorPedido = idsPedidos.isEmpty()
                 ? Map.of()
@@ -152,10 +180,24 @@ public class PedidoPersistenceAdapter implements PedidoRepositoryPort {
     private Predicate[] predicados(
             CriteriaBuilder criteriaBuilder, Root<PedidoEntity> pedido,
             Long idRestaurante, EstadoPedido estado) {
+        if (estado == null) {
+            return new Predicate[] {criteriaBuilder.equal(pedido.get("idRestaurante"), idRestaurante)};
+        }
         return new Predicate[] {
                 criteriaBuilder.equal(pedido.get("idRestaurante"), idRestaurante),
                 criteriaBuilder.equal(pedido.get("estado"), estado)
         };
+    }
+
+    private Predicate[] predicadosCliente(
+            CriteriaBuilder criteriaBuilder, Root<PedidoEntity> pedido,
+            Long idCliente, Long idPedido) {
+        List<Predicate> predicados = new ArrayList<>();
+        predicados.add(criteriaBuilder.equal(pedido.get("idCliente"), idCliente));
+        if (idPedido != null) {
+            predicados.add(criteriaBuilder.equal(pedido.get("id"), idPedido));
+        }
+        return predicados.toArray(Predicate[]::new);
     }
 
     private Pedido mapear(PedidoEntity entidad, List<PedidoPlato> platos) {

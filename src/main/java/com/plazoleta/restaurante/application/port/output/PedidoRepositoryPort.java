@@ -19,6 +19,8 @@ public interface PedidoRepositoryPort {
     Pagina<Pedido> listarPorRestauranteYEstado(
             Long idRestaurante, EstadoPedido estado, int pagina, int tamano);
 
+    Pagina<Pedido> listarPorCliente(Long idCliente, Long idPedido, int pagina, int tamano);
+
     List<HistorialEstadoPedido> listarHistorialEstados(Long idPedido);
 
     List<Pedido> listarEntregadosPorRestaurante(Long idRestaurante);

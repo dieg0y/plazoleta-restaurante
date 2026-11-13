@@ -1,13 +1,18 @@
 package com.plazoleta.restaurante.infrastructure.output.sms;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientResponseException;
 
 import com.plazoleta.restaurante.application.port.output.EnviarSmsPort;
+import com.plazoleta.restaurante.domain.exception.BusinessException;
+import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
 
 @Component
 public class TwilioSmsAdapter implements EnviarSmsPort {
@@ -29,10 +34,13 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
     @Override
     public void enviar(String celular, String mensaje) {
         if (accountSid.isBlank() || authToken.isBlank() || numeroOrigen.isBlank()) {
-            throw new IllegalStateException("Debe configurarse Twilio para enviar notificaciones SMS");
+            throw new SmsDeliveryException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Twilio no está configurado. Define TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y "
+                            + "TWILIO_PHONE_NUMBER, y reinicia Restaurante.");
         }
         if (celular == null || celular.isBlank() || mensaje == null || mensaje.isBlank()) {
-            throw new IllegalArgumentException("El destino y el mensaje SMS son obligatorios");
+            throw new BusinessException("El destino y el mensaje SMS son obligatorios");
         }
 
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
@@ -40,12 +48,23 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
         form.add("From", numeroOrigen);
         form.add("Body", mensaje);
 
-        restClient.post()
-                .uri("https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json", accountSid)
-                .headers(headers -> headers.setBasicAuth(accountSid, authToken))
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .body(form)
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient.post()
+                    .uri("https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json", accountSid)
+                    .headers(headers -> headers.setBasicAuth(accountSid, authToken))
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(form)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException excepcion) {
+            throw new SmsDeliveryException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Twilio rechazó la notificación (HTTP " + excepcion.getStatusCode().value()
+                            + "). Verifica las credenciales y el número remitente configurado.");
+        } catch (ResourceAccessException excepcion) {
+            throw new SmsDeliveryException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "No se pudo conectar con Twilio. Revisa la conexión e inténtalo de nuevo.");
+        }
     }
 }

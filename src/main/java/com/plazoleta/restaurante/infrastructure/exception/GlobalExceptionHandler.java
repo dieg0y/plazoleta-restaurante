@@ -14,4 +14,10 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(excepcion.getMessage(), HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(SmsDeliveryException.class)
+    public ResponseEntity<ErrorResponse> manejarSmsDeliveryException(SmsDeliveryException excepcion) {
+        ErrorResponse error = new ErrorResponse(excepcion.getMessage(), excepcion.getStatus().value());
+        return ResponseEntity.status(excepcion.getStatus()).body(error);
+    }
 }

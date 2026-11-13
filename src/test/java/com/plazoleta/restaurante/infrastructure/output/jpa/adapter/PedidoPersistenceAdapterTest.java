@@ -67,6 +67,31 @@ class PedidoPersistenceAdapterTest {
     }
 
     @Test
+    void listaTodosLosEstadosDelRestauranteYFiltraPedidosDelCliente() {
+        Pedido pendiente = guardarPedidoParaCliente(
+                81L, 76L, EstadoPedido.PENDIENTE, "2026-11-05T18:00:00Z");
+        Pedido enPreparacion = guardarPedidoParaCliente(
+                81L, 76L, EstadoPedido.EN_PREPARACION, "2026-11-05T18:01:00Z");
+        Pedido otroCliente = guardarPedidoParaCliente(
+                82L, 76L, EstadoPedido.LISTO, "2026-11-05T18:02:00Z");
+        Pedido otroRestaurante = guardarPedidoParaCliente(
+                81L, 77L, EstadoPedido.LISTO, "2026-11-05T18:03:00Z");
+
+        Pagina<Pedido> todosLosEstados = adapter.listarPorRestauranteYEstado(76L, null, 0, 10);
+        Pagina<Pedido> pedidosCliente = adapter.listarPorCliente(81L, null, 0, 10);
+        Pagina<Pedido> pedidoFiltrado = adapter.listarPorCliente(81L, pendiente.getId(), 0, 10);
+
+        assertThat(todosLosEstados.contenido()).extracting(Pedido::getId)
+                .containsExactly(pendiente.getId(), enPreparacion.getId(), otroCliente.getId());
+        assertThat(todosLosEstados.totalElementos()).isEqualTo(3);
+        assertThat(pedidosCliente.contenido()).extracting(Pedido::getId)
+                .containsExactly(otroRestaurante.getId(), enPreparacion.getId(), pendiente.getId());
+        assertThat(pedidosCliente.totalElementos()).isEqualTo(3);
+        assertThat(pedidoFiltrado.contenido()).extracting(Pedido::getId).containsExactly(pendiente.getId());
+        assertThat(adapter.listarPorCliente(81L, 999L, 0, 10).contenido()).isEmpty();
+    }
+
+    @Test
     void actualizaEstadoYEmpleadoSinPerderLosPlatosDelPedido() {
         Pedido creado = adapter.guardar(Pedido.builder()
                 .idCliente(42L)
@@ -111,8 +136,13 @@ class PedidoPersistenceAdapterTest {
     }
 
     private Pedido guardarPedido(Long idRestaurante, EstadoPedido estado, String fecha) {
+        return guardarPedidoParaCliente(41L, idRestaurante, estado, fecha);
+    }
+
+    private Pedido guardarPedidoParaCliente(
+            Long idCliente, Long idRestaurante, EstadoPedido estado, String fecha) {
         return adapter.guardar(Pedido.builder()
-                .idCliente(41L)
+                .idCliente(idCliente)
                 .idRestaurante(idRestaurante)
                 .estado(estado)
                 .valorTotal(BigDecimal.ZERO)

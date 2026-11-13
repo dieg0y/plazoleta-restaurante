@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PATCH, "/platos/**").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.POST, "/empleados").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.POST, "/pedidos").hasRole("CLIENTE")
+                .requestMatchers(HttpMethod.GET, "/pedidos/mios").hasRole("CLIENTE")
                 .requestMatchers(HttpMethod.GET, "/pedidos").hasRole("EMPLEADO")
                 .requestMatchers(HttpMethod.PATCH, "/pedidos/*/asignar").hasRole("EMPLEADO")
                 .requestMatchers(HttpMethod.PATCH, "/pedidos/*/listo").hasRole("EMPLEADO")

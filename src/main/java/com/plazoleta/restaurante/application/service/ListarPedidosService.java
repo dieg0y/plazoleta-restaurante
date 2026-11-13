@@ -20,9 +20,6 @@ public class ListarPedidosService implements ListarPedidosUseCase {
         if (idUsuarioEmpleado == null || idUsuarioEmpleado <= 0) {
             throw new BusinessException("El empleado autenticado no es válido");
         }
-        if (estado == null) {
-            throw new BusinessException("El estado del pedido es obligatorio");
-        }
         if (pagina < 0) {
             throw new BusinessException("El número de página no puede ser negativo");
         }

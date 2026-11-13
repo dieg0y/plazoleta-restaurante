@@ -64,8 +64,19 @@ class ListarPedidosServiceTest {
 
     @Test
     void rechazaEstadoYPaginacionInvalidos() {
-        assertThrows(BusinessException.class, () -> service.listar(22L, null, 0, 10));
         assertThrows(BusinessException.class, () -> service.listar(22L, EstadoPedido.PENDIENTE, -1, 10));
         assertThrows(BusinessException.class, () -> service.listar(22L, EstadoPedido.PENDIENTE, 0, 0));
+    }
+
+    @Test
+    void permiteListarTodosLosEstadosCuandoEstadoEsNulo() {
+        when(empleadoRepositoryPort.obtenerPorIdUsuario(22L))
+                .thenReturn(Optional.of(Empleado.builder().idUsuario(22L).idRestaurante(4L).build()));
+        when(pedidoRepositoryPort.listarPorRestauranteYEstado(4L, null, 0, 10))
+                .thenReturn(new Pagina<>(List.of(), 0, 10, 0));
+
+        service.listar(22L, null, 0, 10);
+
+        verify(pedidoRepositoryPort).listarPorRestauranteYEstado(4L, null, 0, 10);
     }
 }

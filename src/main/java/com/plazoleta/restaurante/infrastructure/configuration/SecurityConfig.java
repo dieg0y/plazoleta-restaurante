@@ -3,6 +3,7 @@ package com.plazoleta.restaurante.infrastructure.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,10 +29,14 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) ->
+                    response.sendError(HttpStatus.UNAUTHORIZED.value(), "No autorizado")))
             .authorizeHttpRequests(auth -> auth
                 // Publico: Swagger, errores, menu y listado de restaurantes (HU9)
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()
                 .requestMatchers(HttpMethod.GET, "/platos/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/restaurantes/mio").hasRole("PROPIETARIO")
                 .requestMatchers(HttpMethod.GET, "/restaurantes").permitAll()
                 // HU5: proteccion por rol
                 .requestMatchers(HttpMethod.POST, "/restaurantes").hasRole("ADMINISTRADOR")

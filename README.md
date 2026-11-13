@@ -57,6 +57,7 @@ API y no utiliza Spring `Pageable`.
 | Método | Ruta | Descripción | Acceso |
 |---|---|---|---|
 | GET | `/restaurantes?page=0&size=10` | Lista alfabética paginada | Público |
+| GET | `/restaurantes/mio` | Lista completa de restaurantes del propietario autenticado | PROPIETARIO |
 | POST | `/restaurantes` | Crea restaurante y valida propietario con usuarios | ADMINISTRADOR |
 | GET | `/platos?idRestaurante=1&page=0&size=10` | Lista platos activos | Público |
 | GET | `/platos?idRestaurante=1&todos=true` | Incluye inactivos del propietario autenticado | PROPIETARIO |

@@ -62,9 +62,6 @@ public class CrearEmpleadoService implements CrearEmpleadoUseCase {
         if (empleado.getCelular() == null || empleado.getCelular().isBlank()) {
             throw new BusinessException("El celular del empleado es obligatorio");
         }
-        if (empleado.getFechaNacimiento() == null) {
-            throw new BusinessException("La fecha de nacimiento del empleado es obligatoria");
-        }
         if (empleado.getCorreo() == null || empleado.getCorreo().isBlank()) {
             throw new BusinessException("El correo del empleado es obligatorio");
         }

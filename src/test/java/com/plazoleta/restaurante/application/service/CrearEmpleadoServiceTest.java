@@ -90,6 +90,21 @@ class CrearEmpleadoServiceTest {
     }
 
     @Test
+    @DisplayName("Permite crear un empleado sin fecha de nacimiento")
+    void debeCrearEmpleadoSinFechaNacimiento() {
+        empleadoValido.setFechaNacimiento(null);
+        when(restauranteRepositoryPort.obtenerPorId(1L)).thenReturn(Optional.of(restauranteDueno(5L)));
+        when(usuarioClientePort.crearCuentaEmpleado(any(Empleado.class))).thenReturn(10L);
+        when(empleadoRepositoryPort.guardar(any(Empleado.class)))
+                .thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Empleado resultado = crearEmpleadoService.crearEmpleado(empleadoValido, 5L);
+
+        assertNotNull(resultado);
+        verify(usuarioClientePort).crearCuentaEmpleado(empleadoValido);
+    }
+
+    @Test
     @DisplayName("Rechaza si el restaurante no existe")
     void debeRechazarRestauranteInexistente() {
         empleadoValido.setIdRestaurante(99L);

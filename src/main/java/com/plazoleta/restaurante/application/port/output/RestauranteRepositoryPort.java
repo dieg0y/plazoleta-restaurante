@@ -3,6 +3,7 @@ package com.plazoleta.restaurante.application.port.output;
 import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Restaurante;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface RestauranteRepositoryPort {
@@ -13,4 +14,6 @@ public interface RestauranteRepositoryPort {
 
     // HU9: orden alfabetico por nombre, resuelto por la base de datos
     Pagina<Restaurante> listarOrdenadosPorNombre(int pagina, int tamano);
+
+    List<Restaurante> listarPorIdPropietario(Long idPropietario);
 }

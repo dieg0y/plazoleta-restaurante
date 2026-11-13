@@ -2,6 +2,7 @@ package com.plazoleta.restaurante.infrastructure.input.rest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,8 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.restaurante.application.port.input.CrearRestauranteUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarRestaurantesUseCase;
+import com.plazoleta.restaurante.application.port.input.ListarRestaurantesPropietarioUseCase;
 import com.plazoleta.restaurante.domain.model.Pagina;
 import com.plazoleta.restaurante.domain.model.Restaurante;
+import com.plazoleta.restaurante.infrastructure.configuration.UsuarioAutenticado;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.PageResponse;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteRequest;
 import com.plazoleta.restaurante.infrastructure.input.rest.dto.RestauranteResponse;
@@ -25,6 +28,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @Tag(name = "Restaurantes", description = "Creación y consulta paginada de restaurantes")
 @RestController
 @RequestMapping("/restaurantes")
@@ -34,6 +39,7 @@ public class RestauranteController {
     private final RestauranteRestMapper restauranteRestMapper;
     private final CrearRestauranteUseCase crearRestauranteUseCase;
     private final ListarRestaurantesUseCase listarRestaurantesUseCase;
+    private final ListarRestaurantesPropietarioUseCase listarRestaurantesPropietarioUseCase;
 
     @Operation(summary = "Crear un restaurante")
     @ApiResponses({
@@ -56,5 +62,22 @@ public class RestauranteController {
             @RequestParam(defaultValue = "10") int size) {
         Pagina<Restaurante> pagina = listarRestaurantesUseCase.listarRestaurantes(page, size);
         return ResponseEntity.ok(restauranteRestMapper.toPageResponse(pagina));
+    }
+
+    @Operation(summary = "Listar restaurantes del propietario autenticado")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Restaurantes del propietario"),
+            @ApiResponse(responseCode = "401", description = "Se requiere autenticación"),
+            @ApiResponse(responseCode = "403", description = "Se requiere rol PROPIETARIO")
+    })
+    @GetMapping("/mio")
+    public ResponseEntity<List<RestauranteResponse>> listarMisRestaurantes(
+            @AuthenticationPrincipal UsuarioAutenticado usuario) {
+        List<RestauranteResponse> restaurantes = listarRestaurantesPropietarioUseCase
+                .listarRestaurantes(usuario.id())
+                .stream()
+                .map(restauranteRestMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(restaurantes);
     }
 }

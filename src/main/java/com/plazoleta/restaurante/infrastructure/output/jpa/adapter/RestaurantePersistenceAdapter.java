@@ -62,4 +62,12 @@ public class RestaurantePersistenceAdapter implements RestauranteRepositoryPort 
 
         return new Pagina<>(restaurantes, pagina, tamano, totalElementos);
     }
+
+    @Override
+    public List<Restaurante> listarPorIdPropietario(Long idPropietario) {
+        return jpaRepository.findAllByIdPropietarioOrderByNombreAsc(idPropietario)
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
 }

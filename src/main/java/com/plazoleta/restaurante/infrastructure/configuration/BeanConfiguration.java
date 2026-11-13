@@ -14,6 +14,7 @@ import com.plazoleta.restaurante.application.port.input.ListarPlatosUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarPedidosUseCase;
 import com.plazoleta.restaurante.application.port.input.MarcarPedidoListoUseCase;
 import com.plazoleta.restaurante.application.port.input.ListarRestaurantesUseCase;
+import com.plazoleta.restaurante.application.port.input.ListarRestaurantesPropietarioUseCase;
 import com.plazoleta.restaurante.application.port.input.ModificarPlatoUseCase;
 import com.plazoleta.restaurante.application.port.output.EmpleadoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.PedidoRepositoryPort;
@@ -37,6 +38,7 @@ import com.plazoleta.restaurante.application.service.ListarPlatosService;
 import com.plazoleta.restaurante.application.service.ListarPedidosService;
 import com.plazoleta.restaurante.application.service.MarcarPedidoListoService;
 import com.plazoleta.restaurante.application.service.ListarRestaurantesService;
+import com.plazoleta.restaurante.application.service.ListarRestaurantesPropietarioService;
 import com.plazoleta.restaurante.application.service.ModificarPlatoService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -157,5 +159,11 @@ public class BeanConfiguration {
     public ListarRestaurantesUseCase listarRestaurantesUseCase(
             RestauranteRepositoryPort restauranteRepositoryPort) {
         return new ListarRestaurantesService(restauranteRepositoryPort);
+    }
+
+    @Bean
+    public ListarRestaurantesPropietarioUseCase listarRestaurantesPropietarioUseCase(
+            RestauranteRepositoryPort restauranteRepositoryPort) {
+        return new ListarRestaurantesPropietarioService(restauranteRepositoryPort);
     }
 }

@@ -6,10 +6,8 @@ import com.plazoleta.restaurante.domain.model.Empleado;
 import com.plazoleta.restaurante.infrastructure.output.feign.client.UsuarioCliente;
 import com.plazoleta.restaurante.infrastructure.output.feign.dto.EmpleadoRemotoRequest;
 import com.plazoleta.restaurante.infrastructure.output.feign.dto.EmpleadoRemotoResponse;
-import com.plazoleta.restaurante.infrastructure.output.feign.dto.CelularClienteRemotoResponse;
 
 import feign.FeignException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,13 +18,8 @@ import org.springframework.stereotype.Component;
 public class UsuarioClienteAdapter implements UsuarioClientePort {
 
     private final UsuarioCliente usuarioCliente;
-    private final String internalToken;
-
-    public UsuarioClienteAdapter(
-            UsuarioCliente usuarioCliente,
-            @Value("${app.internal.token:}") String internalToken) {
+    public UsuarioClienteAdapter(UsuarioCliente usuarioCliente) {
         this.usuarioCliente = usuarioCliente;
-        this.internalToken = internalToken;
     }
 
     @Override
@@ -52,21 +45,4 @@ public class UsuarioClienteAdapter implements UsuarioClientePort {
         }
     }
 
-    @Override
-    public String obtenerCelularCliente(Long idCliente) {
-        if (internalToken == null || internalToken.length() < 32) {
-            throw new IllegalStateException("APP_INTERNAL_TOKEN debe tener al menos 32 caracteres");
-        }
-        try {
-            CelularClienteRemotoResponse respuesta =
-                    usuarioCliente.obtenerCelularCliente(idCliente, internalToken);
-            if (respuesta == null || respuesta.celular() == null || respuesta.celular().isBlank()) {
-                throw new BusinessException("El cliente no tiene un teléfono de contacto válido");
-            }
-            return respuesta.celular();
-        } catch (FeignException e) {
-            throw new BusinessException(
-                    "No se pudo obtener el teléfono del cliente (HTTP " + e.status() + ")");
-        }
-    }
 }

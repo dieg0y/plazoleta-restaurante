@@ -133,10 +133,10 @@ public class PedidoController {
     @Operation(summary = "Notificar al cliente cuando su pedido esté listo")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Pedido listo y PIN enviado por SMS"),
-            @ApiResponse(responseCode = "400", description = "El pedido no está en preparación o el SMS es inválido"),
+            @ApiResponse(responseCode = "400", description = "El pedido no está en preparación"),
             @ApiResponse(responseCode = "403", description = "Se requiere el empleado asignado"),
-            @ApiResponse(responseCode = "502", description = "Twilio rechazó la notificación SMS"),
-            @ApiResponse(responseCode = "503", description = "Twilio no está configurado o no está disponible")
+            @ApiResponse(responseCode = "502", description = "Twilio rechazó el SMS"),
+            @ApiResponse(responseCode = "503", description = "Twilio SMS no está configurado o no está disponible")
     })
     @PatchMapping("/{id}/listo")
     public ResponseEntity<PedidoResponse> marcarPedidoListo(

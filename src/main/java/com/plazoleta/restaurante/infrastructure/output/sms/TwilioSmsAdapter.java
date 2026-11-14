@@ -3,20 +3,23 @@ package com.plazoleta.restaurante.infrastructure.output.sms;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.plazoleta.restaurante.application.port.output.EnviarSmsPort;
+import com.plazoleta.restaurante.domain.exception.BusinessException;
+import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
-import com.plazoleta.restaurante.application.port.output.EnviarSmsPort;
-import com.plazoleta.restaurante.domain.exception.BusinessException;
-import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
-
+/**
+ * Equivale a {@code client.messages.create({ body, from, to })} de la API de
+ * mensajes de Twilio: POST /2010-04-01/Accounts/{AccountSid}/Messages.json.
+ */
 @Component
 public class TwilioSmsAdapter implements EnviarSmsPort {
 
@@ -25,37 +28,43 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
     private final String accountSid;
     private final String authToken;
     private final String numeroOrigen;
-    private final RestClient restClient = RestClient.create();
+    private final String numeroDestino;
+    private final RestClient restClient;
 
     public TwilioSmsAdapter(
+            RestClient.Builder restClientBuilder,
             @Value("${app.sms.twilio.account-sid:}") String accountSid,
             @Value("${app.sms.twilio.auth-token:}") String authToken,
-            @Value("${app.sms.twilio.from:}") String numeroOrigen) {
+            @Value("${app.sms.twilio.from:}") String numeroOrigen,
+            @Value("${app.sms.twilio.to:}") String numeroDestino) {
         this.accountSid = accountSid;
         this.authToken = authToken;
         this.numeroOrigen = numeroOrigen;
+        this.numeroDestino = numeroDestino;
+        this.restClient = restClientBuilder.build();
     }
 
     @Override
-    public void enviar(String celular, String mensaje) {
-        if (accountSid.isBlank() || authToken.isBlank() || numeroOrigen.isBlank()) {
+    public void enviar(String mensaje) {
+        if (accountSid.isBlank() || authToken.isBlank() || numeroOrigen.isBlank() || numeroDestino.isBlank()) {
             throw new SmsDeliveryException(
                     HttpStatus.SERVICE_UNAVAILABLE,
-                    "Twilio no está configurado. Define TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN y "
-                            + "TWILIO_PHONE_NUMBER, y reinicia Restaurante.");
+                    "Twilio SMS no está configurado. Define TWILIO_ACCOUNT_SID, "
+                            + "TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER y TWILIO_SMS_TO, "
+                            + "y reinicia Restaurante.");
         }
-        if (celular == null || celular.isBlank() || mensaje == null || mensaje.isBlank()) {
-            throw new BusinessException("El destino y el mensaje SMS son obligatorios");
+        if (mensaje == null || mensaje.isBlank()) {
+            throw new BusinessException("El mensaje SMS es obligatorio");
         }
 
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("To", celular);
+        form.add("To", numeroDestino);
         form.add("From", numeroOrigen);
         form.add("Body", mensaje);
 
         try {
             restClient.post()
-                    .uri("https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json", accountSid)
+                    .uri("https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages.json", accountSid)
                     .headers(headers -> headers.setBasicAuth(accountSid, authToken))
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(form)
@@ -75,18 +84,16 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
         String referencia = codigo.isBlank() ? "sin código Twilio" : "código Twilio " + codigo;
         String recomendacion = switch (codigo) {
             case "20003" -> "Twilio rechazó la autenticación; confirma el Account SID y el Auth Token vigentes.";
-            case "21211", "21614" -> "Twilio no acepta el número destino para SMS; confirma el número en formato E.164.";
+            case "21211", "21614" -> "Twilio no acepta el número destino; confirma el formato E.164.";
             case "21408" -> "Habilita en Twilio los permisos SMS para el país del destinatario.";
-            case "21606" -> "El remitente no pertenece a esta cuenta o no tiene capacidad para enviar SMS.";
-            case "21608" -> "La cuenta Trial requiere que verifiques el número destinatario en Twilio.";
+            case "21606" -> "El remitente no pertenece a esta cuenta o no puede enviar SMS.";
+            case "21608" -> "La cuenta Trial solo entrega SMS a números verificados en Twilio.";
             case "21610" -> "El destinatario optó por no recibir mensajes de esta cuenta.";
-            case "572002" -> "En una cuenta Trial, el remitente debe ser el número de Messaging asignado "
-                    + "en Twilio Console a ese destinatario verificado.";
-            default -> "Consulta este código en los registros de Twilio y revisa cuenta, remitente y destinatario.";
+            default -> "Revisa en Twilio Console la cuenta, el remitente y el destinatario del SMS.";
         };
         return new SmsDeliveryException(
                 HttpStatus.BAD_GATEWAY,
-                "Twilio rechazó la notificación (HTTP " + excepcion.getStatusCode().value()
+                "Twilio rechazó el SMS (HTTP " + excepcion.getStatusCode().value()
                         + ", " + referencia + "). " + recomendacion);
     }
 

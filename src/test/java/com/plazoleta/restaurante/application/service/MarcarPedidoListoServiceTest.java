@@ -9,22 +9,20 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import com.plazoleta.restaurante.application.port.output.CodigoSeguridadPedidoPort;
 import com.plazoleta.restaurante.application.port.output.EmpleadoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.EnviarSmsPort;
 import com.plazoleta.restaurante.application.port.output.PedidoRepositoryPort;
-import com.plazoleta.restaurante.application.port.output.UsuarioClientePort;
 import com.plazoleta.restaurante.domain.exception.BusinessException;
 import com.plazoleta.restaurante.domain.model.Empleado;
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pedido;
 import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,9 +33,6 @@ class MarcarPedidoListoServiceTest {
 
     @Mock
     private PedidoRepositoryPort pedidoRepositoryPort;
-
-    @Mock
-    private UsuarioClientePort usuarioClientePort;
 
     @Mock
     private CodigoSeguridadPedidoPort codigoSeguridadPedidoPort;
@@ -54,7 +49,6 @@ class MarcarPedidoListoServiceTest {
                 .thenReturn(Optional.of(Empleado.builder().idUsuario(22L).idRestaurante(4L).build()));
         when(pedidoRepositoryPort.obtenerPorId(9L))
                 .thenReturn(Optional.of(pedido(4L, EstadoPedido.EN_PREPARACION, 22L)));
-        when(usuarioClientePort.obtenerCelularCliente(14L)).thenReturn("+573001234567");
         when(codigoSeguridadPedidoPort.generar()).thenReturn("123456");
         when(codigoSeguridadPedidoPort.codificar("123456")).thenReturn("hash-seguro");
         when(pedidoRepositoryPort.guardar(any(Pedido.class)))
@@ -64,7 +58,7 @@ class MarcarPedidoListoServiceTest {
 
         assertEquals(EstadoPedido.LISTO, resultado.getEstado());
         assertEquals("hash-seguro", resultado.getCodigoPinHash());
-        verify(enviarSmsPort).enviar("+573001234567", "Tu pedido 9 está listo. PIN de seguridad: 123456");
+        verify(enviarSmsPort).enviar("Tu pedido 9 esta listo. PIN de seguridad: 123456");
     }
 
     @Test
@@ -76,8 +70,7 @@ class MarcarPedidoListoServiceTest {
 
         assertThrows(BusinessException.class, () -> service.marcarListo(9L, 22L));
 
-        verify(usuarioClientePort, never()).obtenerCelularCliente(any());
-        verify(enviarSmsPort, never()).enviar(any(), any());
+        verify(enviarSmsPort, never()).enviar(any());
         verify(pedidoRepositoryPort, never()).guardar(any());
     }
 
@@ -90,22 +83,21 @@ class MarcarPedidoListoServiceTest {
 
         assertThrows(BusinessException.class, () -> service.marcarListo(9L, 22L));
 
-        verify(enviarSmsPort, never()).enviar(any(), any());
+        verify(enviarSmsPort, never()).enviar(any());
         verify(pedidoRepositoryPort, never()).guardar(any());
     }
 
     @Test
-    void noCambiaElEstadoSiFallaLaNotificacionSms() {
+    void noCambiaElEstadoSiFallaLaNotificacionPorSms() {
         when(empleadoRepositoryPort.obtenerPorIdUsuario(22L))
                 .thenReturn(Optional.of(Empleado.builder().idUsuario(22L).idRestaurante(4L).build()));
         when(pedidoRepositoryPort.obtenerPorId(9L))
                 .thenReturn(Optional.of(pedido(4L, EstadoPedido.EN_PREPARACION, 22L)));
-        when(usuarioClientePort.obtenerCelularCliente(14L)).thenReturn("+573001234567");
         when(codigoSeguridadPedidoPort.generar()).thenReturn("123456");
         when(codigoSeguridadPedidoPort.codificar("123456")).thenReturn("hash-seguro");
         org.mockito.Mockito.doThrow(new SmsDeliveryException(
-                HttpStatus.SERVICE_UNAVAILABLE, "Twilio no está configurado"))
-                .when(enviarSmsPort).enviar(any(), any());
+                HttpStatus.SERVICE_UNAVAILABLE, "Twilio SMS no está configurado"))
+                .when(enviarSmsPort).enviar(any());
 
         assertThrows(SmsDeliveryException.class, () -> service.marcarListo(9L, 22L));
 

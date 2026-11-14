@@ -5,7 +5,6 @@ import com.plazoleta.restaurante.application.port.output.CodigoSeguridadPedidoPo
 import com.plazoleta.restaurante.application.port.output.EmpleadoRepositoryPort;
 import com.plazoleta.restaurante.application.port.output.EnviarSmsPort;
 import com.plazoleta.restaurante.application.port.output.PedidoRepositoryPort;
-import com.plazoleta.restaurante.application.port.output.UsuarioClientePort;
 import com.plazoleta.restaurante.domain.exception.BusinessException;
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pedido;
@@ -17,7 +16,6 @@ public class MarcarPedidoListoService implements MarcarPedidoListoUseCase {
 
     private final EmpleadoRepositoryPort empleadoRepositoryPort;
     private final PedidoRepositoryPort pedidoRepositoryPort;
-    private final UsuarioClientePort usuarioClientePort;
     private final CodigoSeguridadPedidoPort codigoSeguridadPedidoPort;
     private final EnviarSmsPort enviarSmsPort;
 
@@ -37,12 +35,10 @@ public class MarcarPedidoListoService implements MarcarPedidoListoUseCase {
             throw new BusinessException("Solo el empleado asignado puede marcar como listo un pedido en preparación");
         }
 
-        String celular = usuarioClientePort.obtenerCelularCliente(pedido.getIdCliente());
         String codigo = codigoSeguridadPedidoPort.generar();
         String codigoCodificado = codigoSeguridadPedidoPort.codificar(codigo);
         enviarSmsPort.enviar(
-                celular,
-                "Tu pedido " + pedido.getId() + " está listo. PIN de seguridad: " + codigo);
+                "Tu pedido " + pedido.getId() + " esta listo. PIN de seguridad: " + codigo);
 
         return pedidoRepositoryPort.guardar(pedido.toBuilder()
                 .estado(EstadoPedido.LISTO)

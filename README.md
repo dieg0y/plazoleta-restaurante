@@ -38,14 +38,15 @@ necesitan MySQL:
 
 Swagger UI: <http://localhost:8081/swagger-ui/index.html>
 
-## Pedidos y notificaciones SMS
+## Pedidos y notificación por SMS
 
 Los pedidos recorren los estados `PENDIENTE`, `EN_PREPARACION`, `LISTO`,
-`ENTREGADO` o `CANCELADO`. Para HU14, configura `APP_INTERNAL_TOKEN` con el
-mismo valor de al menos 32 caracteres en ambos microservicios, y configura
-`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` y `TWILIO_PHONE_NUMBER` con las
-credenciales del proveedor. No guardes estos valores en Git. Las pruebas usan
-adaptadores simulados y no requieren una cuenta de Twilio.
+`ENTREGADO` o `CANCELADO`. Para HU14, configura `TWILIO_ACCOUNT_SID` y
+`TWILIO_AUTH_TOKEN`. El SMS sale de `TWILIO_PHONE_NUMBER` (por defecto
+`+17372508034`) hacia `TWILIO_SMS_TO` (por defecto `+573008172199`) usando
+`POST /2010-04-01/Accounts/{AccountSid}/Messages.json`, el equivalente de
+`client.messages.create`. El cuerpo incluye el PIN de seguridad. No guardes
+el Auth Token en Git. Las pruebas simulan Twilio y no envían SMS reales.
 
 ## Endpoints implementados
 

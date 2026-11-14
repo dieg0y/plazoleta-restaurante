@@ -4,85 +4,82 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
+import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
-
-import com.plazoleta.restaurante.domain.exception.BusinessException;
-import com.plazoleta.restaurante.infrastructure.exception.SmsDeliveryException;
+import org.springframework.web.client.RestClient;
 
 class TwilioSmsAdapterTest {
 
     @Test
-    void fallaExplicitamenteSiTwilioNoEstaConfigurado() {
-        TwilioSmsAdapter adapter = new TwilioSmsAdapter("", "", "");
+    void fallaExplicitamenteSiTwilioSmsNoEstaConfigurado() {
+        TwilioSmsAdapter adapter = new TwilioSmsAdapter(RestClient.builder(), "", "", "", "");
 
         SmsDeliveryException exception = assertThrows(
                 SmsDeliveryException.class,
-                () -> adapter.enviar("+573001234567", "Pedido listo"));
+                () -> adapter.enviar("PIN 123456"));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatus());
         assertTrue(exception.getMessage().contains("TWILIO_ACCOUNT_SID"));
+        assertTrue(exception.getMessage().contains("TWILIO_PHONE_NUMBER"));
+        assertTrue(exception.getMessage().contains("TWILIO_SMS_TO"));
     }
 
     @Test
-    void rechazaDestinoSmsVacioAntesDeContactarTwilio() {
-        TwilioSmsAdapter adapter = new TwilioSmsAdapter("AC123", "token", "+15005550006");
+    void enviaElSmsConLaApiDeMensajesDeTwilio() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        MultiValueMap<String, String> expectedForm = new LinkedMultiValueMap<>();
+        expectedForm.add("To", "+573008172199");
+        expectedForm.add("From", "+17372508034");
+        expectedForm.add("Body", "Tu pedido 9 esta listo. PIN de seguridad: 123456");
+        String basicAuth = "Basic " + Base64.getEncoder()
+                .encodeToString("AC123:token".getBytes(StandardCharsets.UTF_8));
 
-        assertThrows(BusinessException.class, () -> adapter.enviar("", "Pedido listo"));
+        server.expect(requestTo("https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, basicAuth))
+                .andExpect(content().formData(expectedForm))
+                .andRespond(withSuccess());
+
+        TwilioSmsAdapter adapter = new TwilioSmsAdapter(
+                builder, "AC123", "token", "+17372508034", "+573008172199");
+        adapter.enviar("Tu pedido 9 esta listo. PIN de seguridad: 123456");
+
+        server.verify();
     }
 
     @Test
-    void incluyeCodigoYRecomendacionCuandoTwilioRechazaElRemitente() {
+    void incluyeCodigoYRecomendacionSinExponerLaRespuestaCrudaDelProveedor() {
         HttpClientErrorException respuestaTwilio = new HttpClientErrorException(
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                "Unprocessable Entity",
+                HttpStatus.UNAUTHORIZED,
+                "Unauthorized",
                 HttpHeaders.EMPTY,
-                "{\"code\":21606,\"message\":\"mensaje privado del proveedor\"}"
+                "{\"code\":20003,\"message\":\"mensaje privado del proveedor\"}"
                         .getBytes(StandardCharsets.UTF_8),
                 StandardCharsets.UTF_8);
 
         SmsDeliveryException exception = TwilioSmsAdapter.mapearRechazoTwilio(respuestaTwilio);
 
         assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatus());
-        assertTrue(exception.getMessage().contains("HTTP 422"));
-        assertTrue(exception.getMessage().contains("21606"));
-        assertTrue(exception.getMessage().contains("remitente"));
-        assertFalse(exception.getMessage().contains("mensaje privado del proveedor"));
-    }
-
-    @Test
-    void indicaCuandoTwilioRechazaLasCredenciales() {
-        HttpClientErrorException respuestaTwilio = new HttpClientErrorException(
-                HttpStatus.UNAUTHORIZED,
-                "Unauthorized",
-                HttpHeaders.EMPTY,
-                "{\"code\":20003}".getBytes(StandardCharsets.UTF_8),
-                StandardCharsets.UTF_8);
-
-        SmsDeliveryException exception = TwilioSmsAdapter.mapearRechazoTwilio(respuestaTwilio);
-
+        assertTrue(exception.getMessage().contains("HTTP 401"));
         assertTrue(exception.getMessage().contains("20003"));
         assertTrue(exception.getMessage().contains("autenticación"));
-    }
-
-    @Test
-    void explicaElRemitenteAsignadoPorTwilioTrialAlDestinatario() {
-        HttpClientErrorException respuestaTwilio = new HttpClientErrorException(
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                "Unprocessable Entity",
-                HttpHeaders.EMPTY,
-                "{\"code\":572002}".getBytes(StandardCharsets.UTF_8),
-                StandardCharsets.UTF_8);
-
-        SmsDeliveryException exception = TwilioSmsAdapter.mapearRechazoTwilio(respuestaTwilio);
-
-        assertTrue(exception.getMessage().contains("572002"));
-        assertTrue(exception.getMessage().contains("cuenta Trial"));
-        assertTrue(exception.getMessage().contains("asignado"));
+        assertFalse(exception.getMessage().contains("mensaje privado del proveedor"));
     }
 }

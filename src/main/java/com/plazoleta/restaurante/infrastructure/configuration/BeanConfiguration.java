@@ -80,12 +80,10 @@ public class BeanConfiguration {
     public MarcarPedidoListoUseCase marcarPedidoListoUseCase(
             EmpleadoRepositoryPort empleadoRepositoryPort,
             PedidoRepositoryPort pedidoRepositoryPort,
-            UsuarioClientePort usuarioClientePort,
             CodigoSeguridadPedidoPort codigoSeguridadPedidoPort,
             EnviarSmsPort enviarSmsPort) {
         return new MarcarPedidoListoService(
-                empleadoRepositoryPort, pedidoRepositoryPort, usuarioClientePort,
-                codigoSeguridadPedidoPort, enviarSmsPort);
+                empleadoRepositoryPort, pedidoRepositoryPort, codigoSeguridadPedidoPort, enviarSmsPort);
     }
 
     @Bean

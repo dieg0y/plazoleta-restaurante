@@ -9,8 +9,10 @@ import com.plazoleta.restaurante.domain.exception.BusinessException;
 import com.plazoleta.restaurante.domain.model.EstadoPedido;
 import com.plazoleta.restaurante.domain.model.Pedido;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 public class MarcarPedidoListoService implements MarcarPedidoListoUseCase {
 
@@ -39,6 +41,9 @@ public class MarcarPedidoListoService implements MarcarPedidoListoUseCase {
         String codigoCodificado = codigoSeguridadPedidoPort.codificar(codigo);
         enviarSmsPort.enviar(
                 "Tu pedido " + pedido.getId() + " esta listo. PIN de seguridad: " + codigo);
+        // En cuenta Trial Twilio envia una plantilla fija que no incluye este PIN;
+        // se registra en consola para poder completar la entrega en la demo.
+        log.info("PIN de seguridad generado para el pedido {}: {}", pedido.getId(), codigo);
 
         return pedidoRepositoryPort.guardar(pedido.toBuilder()
                 .estado(EstadoPedido.LISTO)

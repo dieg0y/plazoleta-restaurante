@@ -45,8 +45,12 @@ Los pedidos recorren los estados `PENDIENTE`, `EN_PREPARACION`, `LISTO`,
 `TWILIO_AUTH_TOKEN`. El SMS sale de `TWILIO_PHONE_NUMBER` (por defecto
 `+17372508034`) hacia `TWILIO_SMS_TO` (por defecto `+573008172199`) usando
 `POST /2010-04-01/Accounts/{AccountSid}/Messages.json`, el equivalente de
-`client.messages.create`. El cuerpo incluye el PIN de seguridad. No guardes
-el Auth Token en Git. Las pruebas simulan Twilio y no envían SMS reales.
+`client.messages.create`. El cuerpo incluye el PIN de seguridad. En cuentas
+Trial, si Twilio rechaza el texto libre con el código 572006, el adaptador
+reintenta automáticamente con la plantilla `sms_2fa` y el PIN queda registrado
+en el log del servicio para la demostración; con una cuenta de producción el
+SMS lleva el PIN real. No guardes el Auth Token en Git. Las pruebas simulan
+Twilio y no envían SMS reales.
 
 ## Endpoints implementados
 

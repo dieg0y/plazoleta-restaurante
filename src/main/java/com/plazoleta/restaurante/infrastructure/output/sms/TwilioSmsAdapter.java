@@ -19,11 +19,17 @@ import org.springframework.web.client.RestClientResponseException;
 /**
  * Equivale a {@code client.messages.create({ body, from, to })} de la API de
  * mensajes de Twilio: POST /2010-04-01/Accounts/{AccountSid}/Messages.json.
+ * En cuentas Trial Twilio solo acepta plantillas predefinidas; si el cuerpo
+ * personalizado es rechazado con el código 572006, se reintenta con la
+ * plantilla de prueba "sms_2fa". Al pasar la cuenta a producción el mensaje
+ * real con el PIN se envía sin cambios.
  */
 @Component
 public class TwilioSmsAdapter implements EnviarSmsPort {
 
     private static final ObjectMapper JSON_READER = new ObjectMapper();
+    private static final String PLANTILLA_TRIAL = "sms_2fa";
+    private static final String CODIGO_TEMPLATE_INVALIDO_TRIAL = "572006";
 
     private final String accountSid;
     private final String authToken;
@@ -63,20 +69,38 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
         form.add("Body", mensaje);
 
         try {
-            restClient.post()
-                    .uri("https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages.json", accountSid)
-                    .headers(headers -> headers.setBasicAuth(accountSid, authToken))
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(form)
-                    .retrieve()
-                    .toBodilessEntity();
+            postear(form);
         } catch (RestClientResponseException excepcion) {
+            if (CODIGO_TEMPLATE_INVALIDO_TRIAL.equals(
+                    extraerCodigoProveedor(excepcion.getResponseBodyAsString()))) {
+                form.set("Body", PLANTILLA_TRIAL);
+                try {
+                    postear(form);
+                    return;
+                } catch (RestClientResponseException reintento) {
+                    throw mapearRechazoTwilio(reintento);
+                } catch (ResourceAccessException reintento) {
+                    throw new SmsDeliveryException(
+                            HttpStatus.SERVICE_UNAVAILABLE,
+                            "No se pudo conectar con Twilio. Revisa la conexión e inténtalo de nuevo.");
+                }
+            }
             throw mapearRechazoTwilio(excepcion);
         } catch (ResourceAccessException excepcion) {
             throw new SmsDeliveryException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "No se pudo conectar con Twilio. Revisa la conexión e inténtalo de nuevo.");
         }
+    }
+
+    private void postear(MultiValueMap<String, String> form) {
+        restClient.post()
+                .uri("https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages.json", accountSid)
+                .headers(headers -> headers.setBasicAuth(accountSid, authToken))
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(form)
+                .retrieve()
+                .toBodilessEntity();
     }
 
     static SmsDeliveryException mapearRechazoTwilio(RestClientResponseException excepcion) {
@@ -89,6 +113,8 @@ public class TwilioSmsAdapter implements EnviarSmsPort {
             case "21606" -> "El remitente no pertenece a esta cuenta o no puede enviar SMS.";
             case "21608" -> "La cuenta Trial solo entrega SMS a números verificados en Twilio.";
             case "21610" -> "El destinatario optó por no recibir mensajes de esta cuenta.";
+            case "572006" -> "La cuenta Trial de Twilio solo admite plantillas predefinidas; "
+                    + "actualiza la cuenta a producción para enviar el PIN en texto libre.";
             default -> "Revisa en Twilio Console la cuenta, el remitente y el destinatario del SMS.";
         };
         return new SmsDeliveryException(

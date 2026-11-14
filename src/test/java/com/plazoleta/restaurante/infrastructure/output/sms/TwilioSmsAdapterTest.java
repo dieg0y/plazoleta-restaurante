@@ -8,6 +8,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.nio.charset.StandardCharsets;
@@ -55,6 +56,36 @@ class TwilioSmsAdapterTest {
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.AUTHORIZATION, basicAuth))
                 .andExpect(content().formData(expectedForm))
+                .andRespond(withSuccess());
+
+        TwilioSmsAdapter adapter = new TwilioSmsAdapter(
+                builder, "AC123", "token", "+17372508034", "+573008172199");
+        adapter.enviar("Tu pedido 9 esta listo. PIN de seguridad: 123456");
+
+        server.verify();
+    }
+
+    @Test
+    void reintentaConLaPlantillaTrialCuandoTwilioRechazaElCuerpoPersonalizado() {
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        MultiValueMap<String, String> customForm = new LinkedMultiValueMap<>();
+        customForm.add("To", "+573008172199");
+        customForm.add("From", "+17372508034");
+        customForm.add("Body", "Tu pedido 9 esta listo. PIN de seguridad: 123456");
+        MultiValueMap<String, String> trialForm = new LinkedMultiValueMap<>();
+        trialForm.add("To", "+573008172199");
+        trialForm.add("From", "+17372508034");
+        trialForm.add("Body", "sms_2fa");
+
+        server.expect(requestTo("https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().formData(customForm))
+                .andRespond(withStatus(HttpStatus.BAD_REQUEST)
+                        .body("{\"code\":572006,\"message\":\"Invalid template name\"}"));
+        server.expect(requestTo("https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json"))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(content().formData(trialForm))
                 .andRespond(withSuccess());
 
         TwilioSmsAdapter adapter = new TwilioSmsAdapter(
